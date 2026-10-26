@@ -4,6 +4,8 @@
 
 Built around the **Seeed Studio XIAO ESP32-C6**, an **RC522 RFID reader**, and a **1.54-inch ST7789 colour display**.
 
+> **Based on DnG-Crafts/K2-RFID:** This implementation adds the single-board XIAO ESP32-C6 arrangement, TFT interface, updated web UI and printer integration. The original Arduino project is credited to **[DnG-Crafts/K2-RFID](https://github.com/DnG-Crafts/K2-RFID)**.
+
 ![Finished CFS RFID device](images/rfid-printer.JPG)
 
 > **Project status:** v0.3.9 is the working firmware baseline. This repository is currently private and being prepared for broader sharing. The public-safe source uses placeholder configuration values, so you will need to enter your own settings before using it.
@@ -77,9 +79,32 @@ The web interface also has separate actions to **sync/download material data fro
 
 ## 3D-printable enclosure
 
-The case used for the finished build is included in **[enclosure_stls/](enclosure_stls/)**. It contains individual STL parts and a **3MF** project for printing or adapting the enclosure.
+You can print the same case used for this build. The files are in **[enclosure_stls/](enclosure_stls/)**, including individual STL parts and a ready-to-print 3MF project.
 
 ![Finished reader enclosure](images/home-screen.JPG)
+
+### Which file is which?
+
+| File | What it's for |
+| --- | --- |
+| [RFID with display - front.stl](enclosure_stls/RFID%20with%20display%20-%20front.stl) | Main front shell. Holds the screen and RFID reader. |
+| [RFID with display - display secure.stl](enclosure_stls/RFID%20with%20display%20-%20display%20secure.stl) | Display retainer, which presses onto the locating pegs. |
+| [RFID with display - back.stl](enclosure_stls/RFID%20with%20display%20-%20back.stl) | Back cover, where the XIAO ESP32-C6 is fitted. |
+| [RFID with display - xiao secure.stl](enclosure_stls/RFID%20with%20display%20-%20xiao%20secure.stl) | Optional XIAO retainer, fixed with two M2 screws. |
+| [RFID with display - text.stl](enclosure_stls/RFID%20with%20display%20-%20text.stl) | Separate face decoration / lettering for the front. |
+| [RFID with display.3mf](enclosure_stls/RFID%20with%20display.3mf) | Pre-assembled print project with colours and print settings already configured. |
+
+### Putting the case together
+
+1. **Place the front shell face down** on a clean, flat surface so the inside is accessible.
+2. **Fit the TFT display and RFID reader** into their positions inside the front shell.
+3. **Secure the screen:** line up the *display secure* retainer with its pegs, then push it down to hold the display in place. Check that nothing is trapped or under strain.
+4. **Install the XIAO ESP32-C6 into the back cover.** If it needs additional support, fit the optional *xiao secure* part with **two M2 screws** in the pre-made holes.
+5. **Connect the electronics** according to the [wiring guide](docs/Wiring_Reference.pdf), carefully route the wires, then bring the front and back together.
+
+**Adding the front logos:** The front STL does **not** include the RFID or Creality logos by default. To include them, import the front and the relevant separate logo/text pieces into **Creality Print** or **Orca Slicer**, align them and use the slicer's **Assemble** option to combine them into one print. Check alignment in the slicer preview before printing.
+
+**Easiest way to print:** Open **[RFID with display.3mf](enclosure_stls/RFID%20with%20display.3mf)** to start with the pre-assembled model, colours and print settings. Review the printer profile, materials and plate settings before slicing for your own machine.
 
 ## Guides and reference
 
@@ -90,8 +115,6 @@ The case used for the finished build is included in **[enclosure_stls/](enclosur
 - **[Firmware change history](docs/history/)** — earlier development notes
 
 ## Credits and licence status
-
-This project builds on the **Arduino code from [DnG-Crafts/K2-RFID](https://github.com/DnG-Crafts/K2-RFID)**. This implementation adds the single-board XIAO ESP32-C6 arrangement, TFT interface, updated web UI and printer integration.
 
 **Licensing is still under review.** The original upstream repository does not currently declare a repository licence, so please do not assume that the inherited code is available for unrestricted redistribution. Bundled library licences and the use of Creality branding must also be checked before a public release.
 
