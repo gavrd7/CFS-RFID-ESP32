@@ -1,0 +1,15 @@
+XIAO ESP32-C6 -> RC522 / buzzer wiring
+
+XIAO 3V3      -> RC522 3.3V
+XIAO GND      -> RC522 GND
+XIAO D8/GPIO19  -> RC522 SCK
+XIAO D9/GPIO20  -> RC522 MISO
+XIAO D10/GPIO18 -> RC522 MOSI
+XIAO D3/GPIO21  -> RC522 SDA / SS / CS
+XIAO D2/GPIO2   -> RC522 RST
+XIAO D1/GPIO1   -> existing buzzer/speaker signal
+
+Do not use GPIO3 or GPIO14 for peripherals in this build: they control the
+XIAO ESP32-C6 antenna RF switch when USE_EXTERNAL_ANTENNA=true.
+
+RC522 is a 3.3V device. Do not power its logic from 5V.
