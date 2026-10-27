@@ -4,7 +4,7 @@ This guide is for building and setting up the CFS RFID reader for the first time
 
 **Start here:** [Project overview and photos](../README.md) · [Wiring diagram (PDF)](Wiring_Reference.pdf) · [Printable enclosure](../enclosure_stls/) · [Security notes](SECURITY.md)
 
-> **Before you start:** This repository contains a public-safe version of the firmware with placeholder credentials. You must choose your own access-point password and enter the correct settings for any printer you use. The firmware is based on a locally tested v0.3.9 build, but this sanitised source package has not been separately verified as a clean-install release.
+> **Before you start:** The v1.0.0 release baseline uses the feature-complete, locally tested v0.3.9 implementation with no changes to RFID or printer/database logic. This repository contains public-safe source with placeholder credentials; you must set your own access-point password and printer settings. This sanitised source package has not yet been separately verified in a clean install.
 
 ## 1. Collect the parts
 
