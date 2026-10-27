@@ -8,7 +8,7 @@ Built around the **Seeed Studio XIAO ESP32-C6**, an **RC522 RFID reader**, and a
 
 ![Finished CFS RFID device](images/rfid-printer.JPG)
 
-> **Project status:** v0.3.9 is the working firmware baseline. This repository is currently private and being prepared for broader sharing. The public-safe source uses placeholder configuration values, so you will need to enter your own settings before using it.
+> **Version 1.0.0 — feature-complete baseline.** Based on the locally tested v0.3.9 firmware, with no changes to RFID operations, printer transfer or database processing. The repository remains private while licensing, dependencies and a clean build of the sanitised source are reviewed. Enter your own configuration values before using it.
 
 ## What can it do?
 
