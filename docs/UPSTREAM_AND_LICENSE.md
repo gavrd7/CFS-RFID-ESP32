@@ -1,14 +1,19 @@
-# Upstream and licensing due diligence — REQUIRED BEFORE PUBLICATION
+# Upstream attribution and licensing status
 
-This project is derived from earlier CFS RFID/ESP firmware and includes bundled MFRC522, AES and other code. **The upstream repository URL, commit, license and precise origins have not been verified in this archive.**
+The original Arduino foundation comes from [DnG-Crafts/K2-RFID](https://github.com/DnG-Crafts/K2-RFID). This repository retains code based on that project and other bundled third-party sources.
 
-Before making the repository public:
+## Licence for original contributions
 
-1. Identify and credit the original RFID project and printer push-agent project, with permanent repository links and relevant commits.
-2. Inspect each original project and each bundled `src/` subtree for actual licenses and redistribution obligations. Keep existing copyright/license notices intact.
-3. Determine whether code redistribution (including firmware patches and embedded web UI) is permitted. If a required license is absent, ask permission rather than assuming it is open source.
-4. Choose a license for only the code you own, compatible with inherited third-party licenses; add LICENSE and NOTICE files as appropriate.
-5. Review the use of the Creality name/logo and describe the project as unofficial and not endorsed, unless authorization exists.
-6. Verify and document external dependencies including the exact libssh_esp32 distribution used to build the firmware.
+This project offers its **own original copyrightable contributions**, to the extent owned by the author, under **AGPL-3.0-only**. Read [LICENSE](../LICENSE) together with [LICENSE-SCOPE.md](../LICENSE-SCOPE.md). The scope includes original documentation and original enclosure geometry, but excludes inherited code, bundled third-party material and third-party logos/trademarks.
 
-No blanket OSS license is inserted here because the license provenance is unresolved.
+**This is not a blanket licence for the combined firmware.** Permission to distribute and modify the upstream code still requires an applicable upstream licence or express permission.
+
+## Outstanding upstream checks
+
+1. Confirm redistribution and modification permission for inherited DnG-Crafts Arduino source.
+2. Identify any separately sourced printer-push agent code and its terms.
+3. Trace bundled `src/AES/`, `src/MFRC522/`, any source-derived HTML/material records, and other third-party components to their licences, preserving relevant notices.
+4. Verify the source and compatible version for external `libssh_esp32`.
+5. Avoid implying Creality endorsement and check appropriate use of the name and logo in artwork, documentation and 3MF files.
+
+The existence of a public GitHub repository does not itself grant an open-source licence for code without one.
