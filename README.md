@@ -118,6 +118,6 @@ You can print the same case used for this build. The files are in **[enclosure_s
 
 ## Credits and licence status
 
-**Licensing is still under review.** The original upstream repository does not currently declare a repository licence, so please do not assume that the inherited code is available for unrestricted redistribution. Bundled library licences and the use of Creality branding must also be checked before a public release.
+**Licensing:** [AGPL-3.0-only](LICENSE) applies **only to original contributions that this project's author owns** (including original documentation and enclosure designs). It does **not** cover inherited DnG-Crafts Arduino code, bundled third-party sources or Creality logos. See [LICENSE-SCOPE.md](LICENSE-SCOPE.md) for the exact boundaries and [upstream licensing notes](docs/UPSTREAM_AND_LICENSE.md) for outstanding permissions. **Do not assume the complete firmware is AGPL-licensed.**
 
 *This is a community hardware/firmware project, not an official Creality product.*
