@@ -1297,7 +1297,6 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
           <div class="mv-action-row"><input type="submit" class="btn" value="Push to Printer" onClick="pushToPrinter();"></div>
           <br><br>
           <div id="mmMessage"></div>
-          <br><small style="opacity:0.5">Firmware build: 2026-08-20-mergepush</small>
         </div>
         <div id="mmEditView" style="display:none;">
           <table id="mmEditForm"></table>
