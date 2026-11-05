@@ -292,6 +292,66 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
        #mmList th,#mmList td { padding:9px 10px; }
        #mmList .btn { padding:8px 10px;min-width:57px; }
     }
+    /* Settings dialog: consistent two-column alignment, centered and responsive. */
+    #cDialog .main > table {
+      width:min(100%,820px);
+      table-layout:fixed;
+      margin:10px auto 18px;
+    }
+    #cDialog tr > td:first-child {
+      width:37%;
+      box-sizing:border-box;
+      text-align:right;
+      padding:12px 16px;
+      vertical-align:middle;
+    }
+    #cDialog tr > td:nth-child(2) {
+      width:63%;
+      box-sizing:border-box;
+      text-align:left;
+      padding:12px 16px;
+      vertical-align:middle;
+    }
+    #cDialog tr > td:nth-child(2) input[type="text"],
+    #cDialog tr > td:nth-child(2) input[type="password"] {
+      display:block;
+      width:100%;
+      max-width:360px;
+      min-width:0;
+      box-sizing:border-box;
+      margin:0;
+    }
+    #cDialog tr > td:nth-child(2) small {
+      display:block;
+      width:100%;
+      max-width:360px;
+      box-sizing:border-box;
+      margin-top:8px;
+      line-height:1.5;
+      overflow-wrap:anywhere;
+    }
+    #cDialog .mv-settings-actions { justify-content:center;margin:20px auto 10px; }
+    @media (max-width:600px) {
+      #cDialog .main > table { table-layout:auto; }
+      #cDialog tr:not(:first-child) > td {
+        display:block;
+        width:100%;
+        text-align:left;
+        padding:8px 15px;
+        box-sizing:border-box;
+      }
+      #cDialog tr:not(:first-child) > td:first-child {
+        padding-bottom:3px;
+        font-weight:600;
+      }
+      #cDialog tr:not(:first-child) > td:nth-child(2) {
+        padding-top:3px;
+        padding-bottom:14px;
+      }
+      #cDialog tr > td:nth-child(2) input[type="text"],
+      #cDialog tr > td:nth-child(2) input[type="password"],
+      #cDialog tr > td:nth-child(2) small { max-width:none; }
+    }
   </style>
   <script>
     var filaments;
