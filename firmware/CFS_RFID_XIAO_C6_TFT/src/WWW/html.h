@@ -450,11 +450,13 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
               document.getElementById("wifi_ssid").value = configData[1];
               document.getElementById("wifi_host").value = configData[2];
               document.getElementById("printer_host").value = configData[3];
+              document.getElementById("printer_pass").value = ""; // Never return saved credentials to the browser.
               document.getElementById("ap_enabled").checked = configData.length > 4 ? configData[4] == "1" : true;
             } else {
               document.getElementById("ap_ssid").value = "K2_RFID";
               document.getElementById("wifi_ssid").value = "";
               document.getElementById("wifi_host").value = "k2.local";
+              document.getElementById("printer_pass").value = "";
             }
             document.getElementById("cDialog").showModal();
             document.activeElement.blur();
@@ -469,7 +471,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
         alert("Set a WiFi network before disabling the Access Point, or you may lose access to this device.");
         return;
       }
-      var postdata = "ap_ssid=" + document.getElementById("ap_ssid").value + "&ap_pass=" + document.getElementById("ap_pass").value + "&wifi_ssid=" + document.getElementById("wifi_ssid").value + "&wifi_pass=" + document.getElementById("wifi_pass").value + "&wifi_host=" + document.getElementById("wifi_host").value + "&printer_host=" + document.getElementById("printer_host").value + (document.getElementById("ap_enabled").checked ? "&ap_enabled=1" : "") + "&submit";
+      var postdata = "ap_ssid=" + document.getElementById("ap_ssid").value + "&ap_pass=" + document.getElementById("ap_pass").value + "&wifi_ssid=" + document.getElementById("wifi_ssid").value + "&wifi_pass=" + document.getElementById("wifi_pass").value + "&wifi_host=" + document.getElementById("wifi_host").value + "&printer_host=" + document.getElementById("printer_host").value + "&printer_pass=" + encodeURIComponent(document.getElementById("printer_pass").value) + (document.getElementById("ap_enabled").checked ? "&ap_enabled=1" : "") + "&submit";
       xhrRetry("POST", "/config", postdata, "application/x-www-form-urlencoded",
         function () {
           dialog.close();
@@ -1292,6 +1294,13 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
             <td>PRINTER HOST/IP:</td>
             <td>
               <input size="10" maxlength="64" type="text" id="printer_host" value="" autocomplete="off">
+            </td>
+          </tr>
+          <tr>
+            <td>PRINTER SSH PASSWORD:</td>
+            <td>
+              <input size="18" maxlength="128" type="password" id="printer_pass" value="" autocomplete="new-password" placeholder="Leave blank to keep saved password">
+              <small style="display:block;opacity:0.7;line-height:1.4;margin-top:6px;">Stored locally on the reader. Leave blank to retain the previous password. Re-enter after migrating from a firmware with a compiled-in password.</small>
             </td>
           </tr>
         </table>
