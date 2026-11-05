@@ -57,7 +57,7 @@ This is the short version for getting started. **Follow the [full installation g
 2. **Install Arduino IDE and the ESP32 board package.** Install the external libraries listed in the [install guide](docs/INSTALL.md).
 3. **Open the sketch:** `firmware/CFS_RFID_XIAO_C6_TFT/CFS_RFID_XIAO_C6_TFT.ino`.
 4. **Enter your own settings.** Review the placeholder Wi-Fi, access point and printer settings in the sketch. Do not put private passwords into a public GitHub commit.
-5. **Select the board and upload.** In Arduino IDE select **XIAO_ESP32C6**, **4 MB flash**, **USB CDC On Boot: Enabled**, and **No OTA (2MB APP / 2MB SPIFFS)**. Upload over USB.
+5. **Select the board and upload.** In Arduino IDE select **XIAO_ESP32C6**, **4 MB flash**, **USB CDC On Boot: Enabled**, and use the supplied **`partitions.csv` dual-OTA layout** from the complete sketch folder. **Flash once over USB** (back up older readers first). Subsequent firmware updates can use the application OTA `.bin` in Settings.
 6. **Connect and test.** Open Serial Monitor at **115200 baud**, connect to the device using its configured network settings, and open the web interface. Start with a **read test** on a known tag before attempting to write.
 
 **Important:** If you're updating an already configured board, keep **Erase All Flash disabled** to avoid unnecessarily wiping stored settings. See the installation guide for LittleFS considerations.
