@@ -51,6 +51,11 @@ AES aes;
 File upFile;
 String upMsg;
 bool saveDbFailed = false;
+// Web firmware OTA state; independent of printer database transfer and RFID.
+static bool fwUpdateActive = false;
+static bool fwUpdateReady = false;
+static size_t fwUpdateBytes = 0;
+static String fwUpdateError = "No firmware upload received.";
 MD5Builder md5;
 
 IPAddress Server_IP(10, 1, 0, 1);
@@ -1236,10 +1241,15 @@ void setup()
   webServer.on("/display/cache",HTTP_POST,handleDisplayCache);
   webServer.on("/display/resolve",HTTP_POST,handleDisplayResolve);
   webServer.on("/update.html", HTTP_POST, []() {
-    webServer.send(200, "text/plain", upMsg);
-    delay(1000);
-    ESP.restart();
-    }, []() {
+    // Only activate the newly flashed image after the full upload was verified.
+    bool success = fwUpdateReady;
+    webServer.send(success ? 200 : 400, "text/plain",
+                   success ? "Firmware update complete. Rebooting..." : fwUpdateError);
+    if (success) {
+      delay(1200);  // Allow the browser to receive the result.
+      ESP.restart();
+    }
+  }, []() {
     handleFwUpdate();
   });
   webServer.on("/updatedb.html", HTTP_POST, []() {
@@ -1737,99 +1747,61 @@ void handleDbUpdate()
   }
 }
 
+// Firmware upload writes to an inactive OTA application partition in chunks.
+// It never stages a large binary in LittleFS (which stores user settings/data).
+// A board running the legacy No-OTA partition layout will be rejected safely.
 void handleFwUpdate()
 {
-  upMsg = "";
-  if (webServer.uri() != "/update.html") {
-    upMsg = "Error";
-    return;
-  }
   HTTPUpload &upload = webServer.upload();
-  if (!upload.filename.endsWith(".bin")) {
-    upMsg = "Invalid update file<br><br>" + upload.filename;
-    return;
-  }
   if (upload.status == UPLOAD_FILE_START) {
-    if (LittleFS.exists("/update.bin")) {
-      LittleFS.remove("/update.bin");
-    }
-    upFile = LittleFS.open("/update.bin", "w");
-  } else if (upload.status == UPLOAD_FILE_WRITE) {
-    if (upFile) {
-      upFile.write(upload.buf, upload.currentSize);
-    }
-  } else if (upload.status == UPLOAD_FILE_END) {
-    if (upFile) {
-      upFile.close();
-    }
-    updateFw();
-  }
-}
+    fwUpdateReady = false;
+    fwUpdateActive = false;
+    fwUpdateError = "Firmware upload did not complete.";
+    fwUpdateBytes = 0;
 
-void updateFw()
-{
-  if (LittleFS.exists("/update.bin")) {
-    File updateFile;
-    updateFile = LittleFS.open("/update.bin", "r");
-    if (updateFile) {
-      size_t updateSize = updateFile.size();
-      if (updateSize > 0) {
-        md5.begin();
-        md5.addStream(updateFile, updateSize);
-        md5.calculate();
-        String md5Hash = md5.toString();
-        updateFile.close();
-        updateFile = LittleFS.open("/update.bin", "r");
-        if (updateFile) {
-          uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-          if (!Update.begin(maxSketchSpace, U_FLASH)) {
-            updateFile.close();
-            upMsg = "Update failed<br><br>" + errorMsg(Update.getError());
-            return;
-          }
-          int md5BufSize = md5Hash.length() + 1;
-          char md5Buf[md5BufSize];
-          md5Hash.toCharArray(md5Buf, md5BufSize) ;
-          Update.setMD5(md5Buf);
-          long bsent = 0;
-          int cprog = 0;
-          while (updateFile.available()) {
-            uint8_t ibuffer[1];
-            updateFile.read((uint8_t *)ibuffer, 1);
-            Update.write(ibuffer, sizeof(ibuffer));
-            bsent++;
-            int progr = ((double)bsent /  updateSize) * 100;
-            if (progr >= cprog) {
-              cprog = progr + 10;
-            }
-          }
-          updateFile.close();
-          LittleFS.remove("/update.bin");
-          if (Update.end(true))
-          {
-            String uHash = md5Hash.substring(0,10);
-            String iHash = Update.md5String().substring(0,10);
-            iHash.toUpperCase();
-            uHash.toUpperCase();
-            upMsg = "Uploaded:&nbsp; " + uHash + "<br>Installed: " + iHash + "<br><br>Update complete, Rebooting.";
-          }
-          else
-          {
-            upMsg = "Update failed";
-          }
-        }
-      }
-      else {
-        updateFile.close();
-        LittleFS.remove("/update.bin");
-        upMsg = "Error, file is invalid";
-        return;
-      }
+    if (!upload.filename.endsWith(".bin")) {
+      fwUpdateError = "Select a compiled ESP32-C6 application .bin file.";
+      return;
     }
-  }
-  else
-  {
-    upMsg = "No update file found";
+    // UPDATE_SIZE_UNKNOWN writes to the inactive OTA slot. Update.begin()
+    // rejects devices without a suitable OTA partition (including No OTA).
+    if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH)) {
+      fwUpdateError = String("Cannot start OTA update (error ") + Update.getError()
+                      + "). Check OTA partitions and available app space.";
+      return;
+    }
+    fwUpdateActive = true;
+  } else if (upload.status == UPLOAD_FILE_WRITE) {
+    if (!fwUpdateActive) return;
+    if (fwUpdateBytes == 0 && (upload.currentSize == 0 || upload.buf[0] != 0xE9)) {
+      fwUpdateError = "Not a valid ESP32 application image (missing 0xE9 header).";
+      Update.abort();
+      fwUpdateActive = false;
+      return;
+    }
+    size_t written = Update.write(upload.buf, upload.currentSize);
+    if (written != upload.currentSize || Update.hasError()) {
+      fwUpdateError = String("Firmware flash write failed (error ") + Update.getError() + ").";
+      Update.abort();
+      fwUpdateActive = false;
+      return;
+    }
+    fwUpdateBytes += written;
+  } else if (upload.status == UPLOAD_FILE_END) {
+    if (!fwUpdateActive) return;
+    fwUpdateActive = false;
+    if (fwUpdateBytes == 0 || !Update.end(true)) {
+      fwUpdateError = String("Firmware validation failed (error ") + Update.getError() + ").";
+      Update.abort();
+      return;
+    }
+    fwUpdateReady = true;
+    fwUpdateError = "";
+  } else if (upload.status == UPLOAD_FILE_ABORTED) {
+    if (fwUpdateActive) Update.abort();
+    fwUpdateActive = false;
+    fwUpdateReady = false;
+    fwUpdateError = "Firmware upload cancelled or connection interrupted.";
   }
 }
 
