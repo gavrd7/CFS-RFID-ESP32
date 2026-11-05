@@ -1,0 +1,63 @@
+name: Build ESP32-C6 firmware and release assets
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-firmware:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: arduino/setup-arduino-cli@v2
+      - name: Install toolchain and libraries
+        run: |
+          arduino-cli core update-index --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          arduino-cli core install esp32:esp32@3.3.3 --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          arduino-cli lib install "Adafruit GFX Library" "Adafruit ST7735 and ST7789 Library" "LibSSH-ESP32@5.10.0"
+      - name: Compile for XIAO ESP32-C6 with OTA partitions
+        run: |
+          mkdir -p dist/build
+          arduino-cli compile \
+            --fqbn esp32:esp32:XIAO_ESP32C6 \
+            --output-dir dist/build \
+            firmware/CFS_RFID_XIAO_C6_TFT
+      - name: Package application binary, sketch, and checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/release
+          binary="$(find dist/build -maxdepth 1 -type f -name '*.ino.bin' -print -quit)"
+          test -n "$binary"
+          # Max size of either app slot in firmware/.../partitions.csv.
+          test "$(stat -c%s "$binary")" -le "$((0x1B0000))"
+          cp "$binary" dist/release/CFS-RFID-XIAO-ESP32C6-OTA.bin
+          zip -qr dist/release/CFS-RFID-Arduino-Sketch.zip firmware/CFS_RFID_XIAO_C6_TFT
+          (cd dist/release && sha256sum *.bin *.zip > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CFS-RFID-ESP32C6-firmware
+          path: dist/release/*
+          if-no-files-found: error
+
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-firmware
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: CFS-RFID-ESP32C6-firmware
+          path: release-assets
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+          generate_release_notes: true
