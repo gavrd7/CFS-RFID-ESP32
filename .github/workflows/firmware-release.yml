@@ -47,10 +47,10 @@ jobs:
           found = {}
           for pos in range(0, len(data), 32):
               entry = data[pos:pos+32]
-              if len(entry) < 32 or entry[:2] != b"\\xaa\\x50":
+              if len(entry) < 32 or entry[:2] != bytes((0xAA, 0x50)):
                   continue
               _, ptype, subtype, offset, size, name, flags = struct.unpack("<HBBII16sI", entry)
-              found[name.split(b"\\0", 1)[0].decode()] = (ptype, subtype, offset, size)
+              found[name.split(bytes((0,)), 1)[0].decode()] = (ptype, subtype, offset, size)
           assert found.get("app0", (None, None, None, None))[3] == 0x1B0000, found
           assert found.get("app1", (None, None, None, None))[3] == 0x1B0000, found
           assert "spiffs" in found, found
