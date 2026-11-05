@@ -963,27 +963,37 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       }
     }
     function uploadFile() {
-      document.getElementById("upload").style.display = "none";
-      document.getElementById("btnsel").style.display = "none";
-      document.getElementById("status").innerHTML = "<br><progress max='100' value='0'>0%</progress><br><br>Uploading firmware file";
+      if (!file || !file.name.toLowerCase().endsWith(".bin")) return;
+      if (!confirm("Install this ESP32-C6 application firmware? The reader will reboot after a successful update. Back up settings first.")) return;
+      var button = document.getElementById("upload");
+      var select = document.getElementById("btnsel");
+      var status = document.getElementById("status");
+      button.disabled = true;
+      select.disabled = true;
+      status.textContent = "Uploading firmware: 0%";
       var xhr = new XMLHttpRequest();
+      xhr.timeout = 180000;
       xhr.onreadystatechange = function () {
-        if (this.readyState === XMLHttpRequest.DONE) {
-          if (this.status === 200) {
-            document.getElementById("status").innerHTML = this.responseText;
-          } else {
-            document.getElementById("status").innerHTML = "<font color='#df3840'>HTTP Error</font>";
-          }
-          setTimeout(redirect, 8000);
+        if (xhr.readyState !== XMLHttpRequest.DONE) return;
+        button.disabled = false;
+        select.disabled = false;
+        if (xhr.status === 200) {
+          status.textContent = xhr.responseText || "Firmware installed. Rebooting...";
+          setTimeout(redirect, 6000);
+        } else {
+          status.textContent = xhr.responseText || "Firmware update failed. The device should continue running its previous firmware.";
         }
       };
       xhr.upload.onprogress = function (e) {
-        var percentComplete = Math.ceil((e.loaded / e.total) * 100);
-        document.getElementById("status").innerHTML = "<br><progress max='100' value='" + percentComplete + "'>" + percentComplete + "%</progress><br><br>Uploading firmware file";
+        if (e.lengthComputable) {
+          status.textContent = "Uploading firmware: " + Math.round(100 * e.loaded / e.total) + "%";
+        }
       };
-      xhr.upload.onloadend = function (e) {
-        document.getElementById("status").innerHTML = "<div id='loader'></div><br>Updating firmware, Please wait.";
+      xhr.upload.onload = function () {
+        status.textContent = "Upload received. Validating firmware...";
       };
+      xhr.ontimeout = function () { status.textContent = "Firmware upload timed out. Check the reader before retrying."; };
+      xhr.onerror = function () { status.textContent = "Connection interrupted. Check the reader before retrying."; };
       xhr.open("POST", "/update.html", true);
       var formData = new FormData();
       formData.append("fwfile", file);
@@ -1341,6 +1351,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
               <form>
                 <center><input id="btnsel" type="button" class="btn" onclick="document.getElementById('fwfile').click()"
                     value="Select file" style="display: block;"></center>
+                <small style="display:block;opacity:0.7;margin:4px 0 10px;">Upload the ESP32-C6 application .bin from a release. Requires an OTA-enabled partition layout.</small>
                 <p id="selfile"></p>
                 <input id="fwfile" type="file" name="fwupdate" size="0" accept=".bin" onChange="FileSelected();"
                   style="width:0; height:0;"></p>
