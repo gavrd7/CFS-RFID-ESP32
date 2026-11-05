@@ -1237,7 +1237,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
                 <center><input id="dbtnsel" type="button" class="btn"
                     onclick="document.getElementById('dbfile').click()" value="Select file" style="display: block;">
                 </center>
-                <small style="display:block;opacity:0.7;margin:4px 0 12px;">Upload a local material_database.json file to restore the reader database.</small>
+                <small style="display:block;text-align:center;opacity:0.7;margin:10px auto 24px;max-width:520px;">Upload a local material_database.json file to restore the reader database.</small>
                 <p id="dselfile"></p>
                 <input id="dbfile" type="file" name="dbupdate" size="0" accept=".json" onChange="DbFileSelected();"
                   style="width:0; height:0;"></p>
@@ -1249,7 +1249,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
                       style="display: none;"></center>
                   <center><input id="pupload" type="button" class="btn" value="Sync From Printer"
                       onClick="syncLiveFromPrinter('dstatus');" style="display: none;">
-                    <small style="display:block;opacity:0.7;margin:4px 0 8px;">Pull the live material database directly from the configured printer.</small>
+                    <small style="display:block;text-align:center;opacity:0.7;margin:10px auto 16px;max-width:520px;">Pull the live material database directly from the configured printer.</small>
                   </center>
                 </div>
               </form>
