@@ -8,9 +8,11 @@ Built around the **Seeed Studio XIAO ESP32-C6**, an **RC522 RFID reader**, and a
 
 > **Security warning — local network only:** This firmware is intended for use on a **trusted local network**, not the public internet. The web interface (port **80**) and printer-transfer service (port **8081**) do not currently provide a verified authentication/access-control layer for sensitive operations. **Do not port-forward either service, place the ESP32 in a public-facing reverse proxy, or expose it to untrusted networks.** Anyone able to connect to the device may be able to alter configuration, initiate RFID operations or trigger printer database transfers. Use an isolated/trusted Wi-Fi network, change the default AP password, and keep printer credentials private. See [Security notes](docs/SECURITY.md).
 
+> **Printer SSH password compatibility ([Issue #2](https://github.com/gavrd7/CFS-RFID-ESP32/issues/2)):** A contributor reported LibSSH-ESP32 authentication failures with a backslash (`\`) in the printer root password. However, a separate K2 test successfully connected and pulled the material database with a trailing backslash. This is **not a universal restriction**. See the [installation guide](docs/INSTALL.md#4-open-and-configure-the-firmware) for C++ escaping and troubleshooting.
+
 ![Finished CFS RFID device](images/rfid-printer.JPG)
 
-> **Version 1.0.0 — feature-complete baseline.**
+> **Version 1.0.1 — database updater maintenance release.** This release preserves manual database recovery and removes the obsolete firmware updater. The core RFID and printer transfer logic remains unchanged.
 
 ## What can it do?
 
@@ -75,13 +77,17 @@ Use an expendable tag when first learning the write process. Writing incorrect d
 
 On devices migrated to the included **dual-OTA partition layout**, the **Firmware Updater** in Settings can install a compatible **ESP32-C6 application .bin** downloaded from a successful GitHub Actions build or tagged release. The release workflow also packages the Arduino sketch and SHA-256 checksums.
 
-**Existing v1.0.0 devices using the original No OTA partitions require a one-time USB reflash** with the new sketch/partition layout before browser updates will work. Back up the local database and configuration first; partition changes can erase or invalidate stored data. See the [OTA migration and upload instructions](docs/INSTALL.md#moving-an-existing-reader-to-web-firmware-updates). This feature is not hardware validated yet; **do not rely on OTA as your only recovery method**.
+**Existing devices using the original No OTA partitions require a one-time USB reflash** with the new sketch/partition layout before browser updates will work. Back up the local database and configuration first; partition changes can erase or invalidate stored data. See the [OTA migration and upload instructions](docs/INSTALL.md#moving-an-existing-reader-to-web-firmware-updates). This feature is not hardware validated yet; **do not rely on OTA as your only recovery method**.
 
 Firmware uploads are manual; there is no automatic download from GitHub. **The web update endpoint has no verified authentication or signed-image enforcement; keep the device on a trusted local network only.**
 
 ## Printer sync and push
 
 The web interface also has separate actions to **sync/download material data from the printer** and **push/upload entries to the printer**.
+
+**Database Updater (v1.0.1):** Use **Select file** and **Update Database** to restore the reader’s local database from a `material_database.json` file. Alternatively, **Sync From Printer** retrieves the current material database directly from your configured printer using the same established sync operation as the Material Database page. Both options are manual, and their buttons include short explanations.
+
+**Firmware updates:** The obsolete web firmware updater and its upload endpoint have been removed in v1.0.1. For this release, flash firmware over **USB using Arduino IDE**. A replacement browser-based OTA updater is being developed separately in [PR #4](https://github.com/gavrd7/CFS-RFID-ESP32/pull/4) and is **not included** in v1.0.1.
 
 **These are manual actions, not automatic background synchronisation.** Back up the printer's material database before your first push, and avoid testing database writes on a production printer until you understand the recovery process.
 
