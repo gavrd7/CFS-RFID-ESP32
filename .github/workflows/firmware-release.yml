@@ -59,9 +59,34 @@ jobs:
           test -n "$binary"
           # Max size of either app slot in firmware/.../partitions.csv.
           test "$(stat -c%s "$binary")" -le "$((0x1B0000))"
-          cp "$binary" dist/release/CFS-RFID-XIAO-ESP32C6-OTA.bin
-          zip -qr dist/release/CFS-RFID-Arduino-Sketch.zip firmware/CFS_RFID_XIAO_C6_TFT
-          (cd dist/release && sha256sum *.bin *.zip > SHA256SUMS.txt)
+          # Match the established release asset names while also providing
+          # the new standalone OTA application binary. Development/PR builds
+          # use a descriptive snapshot suffix instead of a release version.
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="$GITHUB_REF_NAME"
+          else
+            version="snapshot-${GITHUB_SHA:0:7}"
+          fi
+
+          # Use the wiring reference and enclosure files from this exact
+          # commit, not potentially outdated assets from a previous release.
+          # If they have not changed, these naturally match the old assets.
+          test -s docs/Wiring_Reference.pdf
+          test -d enclosure_stls
+          test -n "$(find enclosure_stls -maxdepth 1 -type f -name '*.stl' -print -quit)"
+          test -f enclosure_stls/'RFID with display.3mf'
+
+          cp "$binary" "dist/release/CFS-RFID-XIAO-ESP32C6-OTA.bin"
+          zip -qr "dist/release/CFS-RFID-ESP32-${version}-Arduino.zip" firmware/CFS_RFID_XIAO_C6_TFT
+          cp docs/Wiring_Reference.pdf "dist/release/CFS-RFID-ESP32-${version}-Wiring.pdf"
+          zip -qr dist/release/enclosure_stls.zip enclosure_stls
+
+          # Publish checksums for all four assets, not just firmware files.
+          (cd dist/release && sha256sum *.bin *.zip *.pdf > SHA256SUMS.txt)
+
+          echo "Release bundle contents:"
+          ls -lh dist/release/
+          test "$(find dist/release -maxdepth 1 -type f | wc -l)" -eq 5
       - uses: actions/upload-artifact@v4
         with:
           name: CFS-RFID-ESP32C6-firmware
