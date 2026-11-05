@@ -107,4 +107,31 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           files: release-assets/*
+          body: |
+            ## Important: one-time USB migration and database backup
+
+            Readers running v1.0.1 or older use the **No OTA** partition scheme.
+            You **cannot install this first OTA-capable release through the old web updater**:
+            back up the reader's local `material_database.json` using
+            **Database Updater → Download Database** and record its settings,
+            then flash the new sketch and its `partitions.csv` **once over USB**.
+            The partition layout changes the LittleFS address and size, so the
+            existing local database and settings may be lost or reformatted.
+            Restore them afterwards, either by uploading the saved JSON or by
+            manually syncing the printer's database (which may not contain
+            reader-only custom entries).
+
+            After the reader is running the new **dual-OTA** layout, later web
+            updates use only the `CFS-RFID-XIAO-ESP32C6-OTA.bin` application
+            image and should preserve the filesystem. Keep USB recovery available.
+            This updater is intended for a **trusted local network** only;
+            firmware uploads are not authenticated or cryptographically signed.
+
+            ## Release downloads
+
+            - `CFS-RFID-XIAO-ESP32C6-OTA.bin` — application image for the new web updater
+            - `CFS-RFID-ESP32-${{ github.ref_name }}-Arduino.zip` — Arduino sketch, including OTA partition table
+            - `CFS-RFID-ESP32-${{ github.ref_name }}-Wiring.pdf` — wiring reference
+            - `enclosure_stls.zip` — printable enclosure parts and 3MF
+            - `SHA256SUMS.txt` — checksums for all downloads
           generate_release_notes: true
