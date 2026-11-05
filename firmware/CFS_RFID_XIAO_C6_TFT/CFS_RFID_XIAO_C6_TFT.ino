@@ -1235,13 +1235,6 @@ void setup()
   webServer.on("/display/transfer",HTTP_POST,handleTftTransfer);
   webServer.on("/display/cache",HTTP_POST,handleDisplayCache);
   webServer.on("/display/resolve",HTTP_POST,handleDisplayResolve);
-  webServer.on("/update.html", HTTP_POST, []() {
-    webServer.send(200, "text/plain", upMsg);
-    delay(1000);
-    ESP.restart();
-    }, []() {
-    handleFwUpdate();
-  });
   webServer.on("/updatedb.html", HTTP_POST, []() {
     webServer.send(200, "text/plain", upMsg);
     delay(1000);
@@ -1734,102 +1727,6 @@ void handleDbUpdate()
       upFile.close();
       upMsg = "Database update complete, Rebooting";
     }
-  }
-}
-
-void handleFwUpdate()
-{
-  upMsg = "";
-  if (webServer.uri() != "/update.html") {
-    upMsg = "Error";
-    return;
-  }
-  HTTPUpload &upload = webServer.upload();
-  if (!upload.filename.endsWith(".bin")) {
-    upMsg = "Invalid update file<br><br>" + upload.filename;
-    return;
-  }
-  if (upload.status == UPLOAD_FILE_START) {
-    if (LittleFS.exists("/update.bin")) {
-      LittleFS.remove("/update.bin");
-    }
-    upFile = LittleFS.open("/update.bin", "w");
-  } else if (upload.status == UPLOAD_FILE_WRITE) {
-    if (upFile) {
-      upFile.write(upload.buf, upload.currentSize);
-    }
-  } else if (upload.status == UPLOAD_FILE_END) {
-    if (upFile) {
-      upFile.close();
-    }
-    updateFw();
-  }
-}
-
-void updateFw()
-{
-  if (LittleFS.exists("/update.bin")) {
-    File updateFile;
-    updateFile = LittleFS.open("/update.bin", "r");
-    if (updateFile) {
-      size_t updateSize = updateFile.size();
-      if (updateSize > 0) {
-        md5.begin();
-        md5.addStream(updateFile, updateSize);
-        md5.calculate();
-        String md5Hash = md5.toString();
-        updateFile.close();
-        updateFile = LittleFS.open("/update.bin", "r");
-        if (updateFile) {
-          uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-          if (!Update.begin(maxSketchSpace, U_FLASH)) {
-            updateFile.close();
-            upMsg = "Update failed<br><br>" + errorMsg(Update.getError());
-            return;
-          }
-          int md5BufSize = md5Hash.length() + 1;
-          char md5Buf[md5BufSize];
-          md5Hash.toCharArray(md5Buf, md5BufSize) ;
-          Update.setMD5(md5Buf);
-          long bsent = 0;
-          int cprog = 0;
-          while (updateFile.available()) {
-            uint8_t ibuffer[1];
-            updateFile.read((uint8_t *)ibuffer, 1);
-            Update.write(ibuffer, sizeof(ibuffer));
-            bsent++;
-            int progr = ((double)bsent /  updateSize) * 100;
-            if (progr >= cprog) {
-              cprog = progr + 10;
-            }
-          }
-          updateFile.close();
-          LittleFS.remove("/update.bin");
-          if (Update.end(true))
-          {
-            String uHash = md5Hash.substring(0,10);
-            String iHash = Update.md5String().substring(0,10);
-            iHash.toUpperCase();
-            uHash.toUpperCase();
-            upMsg = "Uploaded:&nbsp; " + uHash + "<br>Installed: " + iHash + "<br><br>Update complete, Rebooting.";
-          }
-          else
-          {
-            upMsg = "Update failed";
-          }
-        }
-      }
-      else {
-        updateFile.close();
-        LittleFS.remove("/update.bin");
-        upMsg = "Error, file is invalid";
-        return;
-      }
-    }
-  }
-  else
-  {
-    upMsg = "No update file found";
   }
 }
 
