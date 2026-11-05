@@ -1376,28 +1376,24 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
           <tr>
             <td>
               <form>
-                <center><input id="dbtnsel" type="button" class="btn"
-                    onclick="document.getElementById('dbfile').click()" value="Select file" style="display: block;">
-                </center>
-                <small style="display:block;text-align:center;opacity:0.7;margin:10px auto 24px;max-width:520px;">Upload a local material_database.json file to restore the reader database.</small>
-                <p id="dselfile"></p>
-                <input id="dbfile" type="file" name="dbupdate" size="0" accept=".json" onChange="DbFileSelected();"
-                  style="width:0; height:0;"></p>
-                <div>
-                  <center>
-                    <p id="dstatus"></p>
-                  </center>
-                  <center><input id="dupload" type="button" class="btn" value="Update Database" onClick="uploadDb();"
-                      style="display: none;"></center>
-                  <center><input id="ddownload" type="button" class="btn" value="Download Database"
-                      onClick="downloadCurrentDb();">
-                    <small style="display:block;text-align:center;opacity:0.7;margin:10px auto 24px;max-width:520px;">Download the reader's current local material_database.json as a backup.</small>
-                  </center>
-                  <center><input id="pupload" type="button" class="btn" value="Sync From Printer"
-                      onClick="syncLiveFromPrinter('dstatus');" style="display: none;">
-                    <small style="display:block;text-align:center;opacity:0.7;margin:10px auto 16px;max-width:520px;">Pull the live material database directly from the configured printer.</small>
-                  </center>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:24px;padding:12px 12px 18px;">
+                  <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;">
+                    <input id="dbtnsel" type="button" class="btn" onclick="document.getElementById('dbfile').click()" value="Select file" style="display:block;margin:0;">
+                    <small style="display:block;text-align:center;opacity:0.7;line-height:1.5;">Upload a local material_database.json file to restore the reader database.</small>
+                    <p id="dselfile" style="margin:0;text-align:center;"></p>
+                    <input id="dbfile" type="file" name="dbupdate" accept=".json" onChange="DbFileSelected();" style="display:none;">
+                    <input id="dupload" type="button" class="btn" value="Update Database" onClick="uploadDb();" style="display:none;margin:0;">
+                  </div>
+                  <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;">
+                    <input id="ddownload" type="button" class="btn" value="Download Database" onClick="downloadCurrentDb();" style="margin:0;">
+                    <small style="display:block;text-align:center;opacity:0.7;line-height:1.5;">Download the reader's current local material_database.json as a backup.</small>
+                  </div>
+                  <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;">
+                    <input id="pupload" type="button" class="btn" value="Sync From Printer" onClick="syncLiveFromPrinter('dstatus');" style="display:none;margin:0;">
+                    <small style="display:block;text-align:center;opacity:0.7;line-height:1.5;">Pull the live material database directly from the configured printer.</small>
+                  </div>
                 </div>
+                <p id="dstatus" role="status" aria-live="polite" style="text-align:center;overflow-wrap:anywhere;line-height:1.4;margin:12px 18px 20px;"></p>
               </form>
             </td>
           </tr>
