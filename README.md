@@ -75,6 +75,9 @@ Use an expendable tag when first learning the write process. Writing incorrect d
 
 ## Web firmware updates (OTA)
 
+**Printer SSH credentials after OTA:** Precompiled GitHub Actions binaries cannot contain your private printer root password. The OTA build now accepts it under **Settings → Printer SSH Password** and saves it locally on the reader. If updating from firmware where this password was compiled into the sketch, enter the password once in Settings after OTA and save. Future application OTA updates should preserve the stored value. The Settings page never displays the saved password. Note that stored credentials and configuration requests are not encrypted/authenticated by the reader; use a trusted, isolated LAN only.
+
+
 On devices migrated to the included **dual-OTA partition layout**, the **Firmware Updater** in Settings can install a compatible **ESP32-C6 application .bin** downloaded from a successful GitHub Actions build or tagged release. The release workflow also packages the Arduino sketch and SHA-256 checksums.
 
 **Existing devices using the original No OTA partitions require a one-time USB reflash** with the new sketch/partition layout before browser updates will work. Back up the local database and configuration first; partition changes can erase or invalidate stored data. See the [OTA migration and upload instructions](docs/INSTALL.md#moving-an-existing-reader-to-web-firmware-updates). This feature is not hardware validated yet; **do not rely on OTA as your only recovery method**.
