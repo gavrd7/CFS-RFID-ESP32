@@ -24,8 +24,12 @@ jobs:
       - name: Compile for XIAO ESP32-C6 with OTA partitions
         run: |
           mkdir -p dist/build
+          # The sketch's partitions.csv is selected by the ESP32 build system,
+          # but Arduino CLI otherwise retains the board's default 1.25MB
+          # size check. Match the two 0x1B0000-byte OTA application slots.
           arduino-cli compile \
             --fqbn esp32:esp32:XIAO_ESP32C6 \
+            --build-property upload.maximum_size=1769472 \
             --output-dir dist/build \
             firmware/CFS_RFID_XIAO_C6_TFT
       - name: Package application binary, sketch, and checksums
@@ -33,6 +37,24 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist/release
+          # Verify the emitted partition binary includes both OTA app
+          # partitions and LittleFS storage before publishing any image.
+          partitions="$(find dist/build -maxdepth 1 -name '*.partitions.bin' -print -quit)"
+          test -n "$partitions"
+          python3 - "$partitions" <<'PY'
+          import struct, sys
+          data = open(sys.argv[1], "rb").read()
+          found = {}
+          for pos in range(0, len(data), 32):
+              entry = data[pos:pos+32]
+              if len(entry) < 32 or entry[:2] != b"\\xaa\\x50":
+                  continue
+              _, ptype, subtype, offset, size, name, flags = struct.unpack("<HBBII16sI", entry)
+              found[name.split(b"\\0", 1)[0].decode()] = (ptype, subtype, offset, size)
+          assert found.get("app0", (None, None, None, None))[3] == 0x1B0000, found
+          assert found.get("app1", (None, None, None, None))[3] == 0x1B0000, found
+          assert "spiffs" in found, found
+          PY
           binary="$(find dist/build -maxdepth 1 -type f -name '*.ino.bin' -print -quit)"
           test -n "$binary"
           # Max size of either app slot in firmware/.../partitions.csv.
