@@ -4,7 +4,7 @@ This guide is for building and setting up the CFS RFID reader for the first time
 
 **Start here:** [Project overview and photos](../README.md) · [Wiring diagram (PDF)](Wiring_Reference.pdf) · [Printable enclosure](../enclosure_stls/) · [Security notes](SECURITY.md)
 
-> **Before you start:** The v1.0.0 release baseline uses the feature-complete, locally tested v0.3.9 implementation with no changes to RFID or printer/database logic. This repository contains public-safe source with placeholder credentials; you must set your own access-point password and printer settings. This sanitised source package has not yet been separately verified in a clean install.
+> **Before you start (v1.0.1):** This maintenance release builds on the v1.0.0 baseline, fixes the Database Updater interface, preserves manual JSON recovery and removes the obsolete web firmware updater. RFID operations and the established printer SSH/SCP/database transfer routines are unchanged. The public-safe source contains placeholder credentials; configure your own access-point and printer settings.
 
 ## 1. Collect the parts
 
@@ -93,6 +93,8 @@ What these mean:
 
 The public-safe sketch also contains `PRINTER_PASS = "SET_YOUR_PRINTER_PASSWORD"`. Printer SSH details must be configured separately before using printer sync/push. **Don't copy credentials into a public GitHub commit** or publish screenshots showing them.
 
+> **Printer SSH password compatibility ([Issue #2](https://github.com/gavrd7/CFS-RFID-ESP32/issues/2)):** A contributor reported LibSSH-ESP32 authentication failures with a backslash (`\`) in the root password, even though their diagnostic reported the correct `0x5C` byte reaching the library. A separate K2 test successfully connected and pulled the material database with a trailing backslash, so this is **not a universal restriction**. In C++ source, each literal backslash must be escaped as `\\` (for example, the source string `"example\\"` represents a password ending in one backslash). If authentication fails, verify the compiled bytes and printer SSH configuration. This applies only to printer SSH credentials, not Wi-Fi or AP passwords.
+
 **Settings stored on the board can override the sketch's starting defaults.** When troubleshooting an existing device, check the web configuration and stored `/config.ini` values as well.
 
 ## 5. Choose Arduino upload settings
@@ -117,7 +119,7 @@ Click **Verify** (✓) to compile first. If successful, click **Upload**. Watch 
 
 ### Moving an existing reader to web firmware updates
 
-Older builds were flashed using **No OTA (2MB APP / 2MB SPIFFS)**. That partition scheme cannot accept an OTA application update. The sketch now contains a custom `partitions.csv` for a **4 MB XIAO ESP32-C6**, with two 0x1B0000-byte application slots and a 0x90000-byte LittleFS-compatible data partition.
+The **v1.0.1 release** and older builds were flashed using **No OTA (2MB APP / 2MB SPIFFS)**. That partition scheme cannot accept an OTA application update. This OTA development branch adds a custom `partitions.csv` for a **4 MB XIAO ESP32-C6**, with two 0x1B0000-byte application slots and a 0x90000-byte LittleFS-compatible data partition.
 
 1. **Back up** your reader settings, Wi-Fi/AP configuration and material database before changing partitions. The old and new filesystem partitions differ and stored files may become inaccessible or be formatted.
 2. Compile the **complete updated sketch folder**, including `partitions.csv`. Confirm the IDE/CLI build actually uses the custom partition table and that the application fits the OTA slot. Do **not** flash if the binary exceeds 0x1B0000 bytes.
@@ -180,10 +182,12 @@ You do **not** need printer connectivity to get the reader, TFT and web interfac
 
 When ready, configure a compatible Creality printer's address and SSH access. This project has been developed around Creality printer material-database workflows; paths and permissions can differ by printer model or firmware.
 
-The web interface has two separate manual actions:
+The web interface provides these separate manual actions:
 
-- **Sync / Download:** retrieve the printer's material data.
-- **Push / Upload:** send updated material information back to the printer.
+- **Database Updater → Select file / Update Database:** upload a local `material_database.json` to restore the reader’s material database. This remains available for recovery.
+- **Database Updater → Sync From Printer:** retrieve the live material database directly from the configured printer using the existing SSH/SCP-backed sync function.
+- **Material Database → Sync Live From Printer:** the same printer retrieval operation, also accessible where you edit materials.
+- **Material Database → Push to Printer:** send edited material information back to the printer after reviewing changes.
 
 **Back up your printer's material database before your first push.** A bad or incomplete transfer could damage printer configuration. Avoid experimenting with database writes on a production printer. The transfer and validation routines are intentionally kept unchanged from the tested firmware.
 
