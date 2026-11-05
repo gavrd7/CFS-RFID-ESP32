@@ -72,7 +72,7 @@ bool AP_ENABLED = true;
 // through PRINTER_HOSTNAME and is loaded from /config.ini.
 const int   PRINTER_PORT = 22;
 const char *PRINTER_USER = "root";
-const char *PRINTER_PASS = "SET_YOUR_PRINTER_PASSWORD";
+String PRINTER_PASSWORD = "";  // Saved in /config.ini, not embedded in release firmware.
 const int   RAW_SERVER_PORT = 8081;
 const bool  PRINTER_IS_K1 = false;
 const char *REMOTE_DIR_K1 = "/usr/data/creality/userdata/box/";
@@ -483,7 +483,13 @@ static ssh_session openAuthedSession(String &err)
   // Fine for a trusted home LAN; add pinning if this ever leaves that
   // context.
 
-  if (ssh_userauth_password(session, NULL, PRINTER_PASS) != SSH_AUTH_SUCCESS) {
+  if (PRINTER_PASSWORD.isEmpty()) {
+    err = "Printer SSH password not configured. Enter it in Settings.";
+    ssh_disconnect(session);
+    ssh_free(session);
+    return NULL;
+  }
+  if (ssh_userauth_password(session, NULL, PRINTER_PASSWORD.c_str()) != SSH_AUTH_SUCCESS) {
     err = String("auth failed: ") + ssh_get_error(session);
     ssh_disconnect(session);
     ssh_free(session);
@@ -1624,6 +1630,16 @@ void handleConfigP()
     }
     WIFI_HOSTNAME = webServer.arg("wifi_host");
     PRINTER_HOSTNAME = webServer.arg("printer_host");
+    // A blank field means keep the stored credential. Never return passwords
+    // in GET /config; OTA application updates preserve this LittleFS file.
+    if (webServer.hasArg("printer_pass") && webServer.arg("printer_pass").length() > 0) {
+      String newPassword = webServer.arg("printer_pass");
+      if (newPassword.length() > 128 || newPassword.indexOf('\r') >= 0 || newPassword.indexOf('\n') >= 0) {
+        webServer.send(400, "text/plain", "Invalid printer SSH password");
+        return;
+      }
+      PRINTER_PASSWORD = newPassword;
+    }
     // Checkboxes only appear in form data when checked - so treat presence
     // of the arg as "on". Refuse to disable the AP unless WiFi credentials
     // are actually set, so the device can't be locked out of being reachable.
@@ -1632,7 +1648,7 @@ void handleConfigP()
     File file = LittleFS.open("/config.ini", "w");
     if (file)
     {
-      file.print("\r\nAP_SSID=" + AP_SSID + "\r\nAP_PASS=" + AP_PASS + "\r\nWIFI_SSID=" + WIFI_SSID + "\r\nWIFI_PASS=" + WIFI_PASS + "\r\nWIFI_HOST=" + WIFI_HOSTNAME + "\r\nPRINTER_HOST=" + PRINTER_HOSTNAME + "\r\nAP_ENABLED=" + (AP_ENABLED ? "1" : "0") + "\r\n");
+      file.print("\r\nAP_SSID=" + AP_SSID + "\r\nAP_PASS=" + AP_PASS + "\r\nWIFI_SSID=" + WIFI_SSID + "\r\nWIFI_PASS=" + WIFI_PASS + "\r\nWIFI_HOST=" + WIFI_HOSTNAME + "\r\nPRINTER_HOST=" + PRINTER_HOSTNAME + "\r\nPRINTER_PASS=" + PRINTER_PASSWORD + "\r\nAP_ENABLED=" + (AP_ENABLED ? "1" : "0") + "\r\n");
       file.close();
     }
     String htmStr = "OK";
@@ -1995,6 +2011,10 @@ void loadConfig()
         PRINTER_HOSTNAME = split(iniData, "PRINTER_HOST=", "\r\n");
         PRINTER_HOSTNAME.trim();
       }
+      if (instr(iniData, "PRINTER_PASS="))
+      {
+        PRINTER_PASSWORD = split(iniData, "PRINTER_PASS=", "\r\n");
+      }
 
 
       if (instr(iniData, "AP_ENABLED="))
@@ -2011,7 +2031,7 @@ void loadConfig()
     File file = LittleFS.open("/config.ini", "w");
     if (file)
     {
-      file.print("\r\nAP_SSID=" + AP_SSID + "\r\nAP_PASS=" + AP_PASS + "\r\nWIFI_SSID=" + WIFI_SSID + "\r\nWIFI_PASS=" + WIFI_PASS + "\r\nWIFI_HOST=" + WIFI_HOSTNAME + "\r\nPRINTER_HOST=" + PRINTER_HOSTNAME + "\r\nAP_ENABLED=" + (AP_ENABLED ? "1" : "0") + "\r\n");
+      file.print("\r\nAP_SSID=" + AP_SSID + "\r\nAP_PASS=" + AP_PASS + "\r\nWIFI_SSID=" + WIFI_SSID + "\r\nWIFI_PASS=" + WIFI_PASS + "\r\nWIFI_HOST=" + WIFI_HOSTNAME + "\r\nPRINTER_HOST=" + PRINTER_HOSTNAME + "\r\nPRINTER_PASS=" + PRINTER_PASSWORD + "\r\nAP_ENABLED=" + (AP_ENABLED ? "1" : "0") + "\r\n");
       file.close();
     }
   }
