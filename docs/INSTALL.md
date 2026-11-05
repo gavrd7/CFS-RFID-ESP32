@@ -132,7 +132,7 @@ For subsequent web uploads, select **only the application OTA .bin**; never uplo
 
 ### Build assets from GitHub Actions
 
-The `Build ESP32-C6 firmware and release assets` workflow compiles the sketch and provides an application OTA binary, a zipped Arduino sketch directory (including the custom partition table), and SHA-256 checksums. Source code is also available from GitHub. Tagged `v*` releases attach these files when the build passes. The build is pinned to ESP32 core 3.3.3 and LibSSH-ESP32 5.10.0; it must pass CI and be hardware-tested before relying on release binaries. **If compilation fails or the binary is too large, no OTA binary should be published.**
+The `Build ESP32-C6 firmware and release assets` workflow compiles the sketch and packages the **OTA application binary**, a **versioned Arduino sketch ZIP** (including the custom partition table), the **wiring reference PDF**, **`enclosure_stls.zip`** (including the 3MF), and **SHA-256 checksums for every asset**. It takes the wiring and enclosure files from the same repository commit used to build the firmware, so releases automatically include revisions when those files change. Source code is also available from GitHub. Tagged `v*` releases attach these files when the build passes. The build is pinned to ESP32 core 3.3.3 and LibSSH-ESP32 5.10.0; it must pass CI and be hardware-tested before relying on release binaries. **If compilation fails or the binary is too large, no OTA binary should be published.**
 
 The embedded web interface does not require a separate LittleFS filesystem upload.
 
