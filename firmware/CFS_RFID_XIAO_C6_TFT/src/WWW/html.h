@@ -1330,9 +1330,11 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
           <tr>
             <td>
               <form>
-                <center><input id="btnsel" type="button" class="btn" onclick="document.getElementById('fwfile').click()"
-                    value="Select file" style="display: block;"></center>
-                <small style="display:block;text-align:center;opacity:0.7;margin:10px auto 18px;max-width:520px;">Upload the ESP32-C6 application .bin from a release. Requires an OTA-enabled partition layout.</small>
+                <center style="width:100%;">
+                  <input id="btnsel" type="button" class="btn" onclick="document.getElementById('fwfile').click()"
+                    value="Select file" style="display:block;">
+                  <small style="display:block;width:100%;max-width:520px;box-sizing:border-box;text-align:center;line-height:1.5;opacity:0.7;margin:10px auto 18px;">Upload the ESP32-C6 application .bin from a release. Requires an OTA-enabled partition layout.</small>
+                </center>
                 <p id="selfile"></p>
                 <input id="fwfile" type="file" name="fwupdate" size="0" accept=".bin" onChange="FileSelected();"
                   style="width:0; height:0;"></p>
