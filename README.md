@@ -71,6 +71,14 @@ Use an expendable tag when first learning the write process. Writing incorrect d
 
 ![Read tag prompt shown on the TFT](images/tag-read.JPG)
 
+## Web firmware updates (OTA)
+
+On devices migrated to the included **dual-OTA partition layout**, the **Firmware Updater** in Settings can install a compatible **ESP32-C6 application .bin** downloaded from a successful GitHub Actions build or tagged release. The release workflow also packages the Arduino sketch and SHA-256 checksums.
+
+**Existing v1.0.0 devices using the original No OTA partitions require a one-time USB reflash** with the new sketch/partition layout before browser updates will work. Back up the local database and configuration first; partition changes can erase or invalidate stored data. See the [OTA migration and upload instructions](docs/INSTALL.md#moving-an-existing-reader-to-web-firmware-updates). This feature is not hardware validated yet; **do not rely on OTA as your only recovery method**.
+
+Firmware uploads are manual; there is no automatic download from GitHub. **The web update endpoint has no verified authentication or signed-image enforcement; keep the device on a trusted local network only.**
+
 ## Printer sync and push
 
 The web interface also has separate actions to **sync/download material data from the printer** and **push/upload entries to the printer**.
