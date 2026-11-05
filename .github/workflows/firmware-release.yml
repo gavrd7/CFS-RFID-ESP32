@@ -142,9 +142,14 @@ jobs:
 
             After the reader is running the new **dual-OTA** layout, later web
             updates use only the `CFS-RFID-XIAO-ESP32C6-OTA.bin` application
-            image and should preserve the filesystem. Keep USB recovery available.
-            This updater is intended for a **trusted local network** only;
-            firmware uploads are not authenticated or cryptographically signed.
+            image and normally preserve the LittleFS database and settings.
+            **Printer SSH password:** Public binaries contain no private password.
+            After the first migration, enter it under **Settings → Printer SSH
+            Password** and save. The stored password was verified to persist
+            across a subsequent OTA update. Do not expose stored credentials.
+            Keep USB recovery available. This updater is intended for a
+            **trusted local network** only; firmware uploads are not
+            authenticated or cryptographically signed.
 
             ## Release downloads
 
