@@ -12,7 +12,7 @@ Built around the **Seeed Studio XIAO ESP32-C6**, an **RC522 RFID reader**, and a
 
 ![Finished CFS RFID device](images/rfid-printer.JPG)
 
-> **Version 1.0.1 — database updater maintenance release.** This release preserves manual database recovery and removes the obsolete firmware updater. The core RFID and printer transfer logic remains unchanged.
+> **OTA-capable firmware (successor to v1.0.1).** Adds manual browser firmware updates and CI-built release downloads. **Upgrading from v1.0.1 or earlier requires a one-time USB flash with new partitions and can erase the reader’s local database and settings.** See the migration instructions below.
 
 ## What can it do?
 
@@ -75,12 +75,14 @@ Use an expendable tag when first learning the write process. Writing incorrect d
 
 ## Web firmware updates (OTA)
 
-**Printer SSH credentials after OTA:** Precompiled GitHub Actions binaries cannot contain your private printer root password. The OTA build now accepts it under **Settings → Printer SSH Password** and saves it locally on the reader. If updating from firmware where this password was compiled into the sketch, enter the password once in Settings after OTA and save. Future application OTA updates should preserve the stored value. The Settings page never displays the saved password. Note that stored credentials and configuration requests are not encrypted/authenticated by the reader; use a trusted, isolated LAN only.
+> **IMPORTANT — FIRST-TIME OTA MIGRATION MAY ERASE LOCAL DATA:** Firmware v1.0.1 and earlier use **No OTA** partitions. This release moves LittleFS to a different flash address/size to make room for two firmware slots. **Before flashing over USB, use Database Updater → Download Database to save `material_database.json`, and record your AP, Wi-Fi and printer settings.** The initial USB flash may leave the existing filesystem inaccessible or trigger formatting. After flashing, restore the database using **Select file / Update Database** or manually **Sync From Printer** (which may omit reader-only custom records). **The OTA `.bin` cannot perform this initial partition migration.** Full steps: [installation guide](docs/INSTALL.md#moving-an-existing-reader-to-web-firmware-updates).
+
+**Printer SSH credentials after OTA:** Precompiled GitHub Actions binaries do not contain your private printer root password. Enter it once under **Settings → Printer SSH Password** and save. It is stored in the reader’s LittleFS `/config.ini` and was confirmed to survive a subsequent OTA update, along with the local material database. A blank password field retains the saved password; the Settings page does not reveal it. If you previously compiled the password into the sketch, you must enter it again once after upgrading to this release. Credentials are stored as plaintext and the settings interface uses unauthenticated HTTP; use a trusted, isolated LAN only.
 
 
-On devices migrated to the included **dual-OTA partition layout**, the **Firmware Updater** in Settings can install a compatible **ESP32-C6 application .bin** downloaded from a successful GitHub Actions build or tagged release. The release workflow also packages the Arduino sketch and SHA-256 checksums.
+Once the **dual-OTA partition layout** is installed over USB, **Settings → Firmware Updater** accepts the compatible **`CFS-RFID-XIAO-ESP32C6-OTA.bin`** application image from a successful GitHub Actions build or tagged release. These *subsequent* OTA updates normally leave the separate LittleFS data partition untouched. Hardware tests confirmed successful OTA flashing/reboot, printer reconnection, custom-tag reading, database restoration by printer sync and password persistence across updates. The release workflow packages the OTA binary, Arduino sketch ZIP, wiring PDF, enclosure files and SHA-256 checksums.
 
-**Existing devices using the original No OTA partitions require a one-time USB reflash** with the new sketch/partition layout before browser updates will work. Back up the local database and configuration first; partition changes can erase or invalidate stored data. See the [OTA migration and upload instructions](docs/INSTALL.md#moving-an-existing-reader-to-web-firmware-updates). This feature is not hardware validated yet; **do not rely on OTA as your only recovery method**.
+**USB recovery remains essential:** Web OTA cannot change the partition table, and there is no guaranteed automatic rollback. See the [OTA migration and upload instructions](docs/INSTALL.md#moving-an-existing-reader-to-web-firmware-updates).
 
 Firmware uploads are manual; there is no automatic download from GitHub. **The web update endpoint has no verified authentication or signed-image enforcement; keep the device on a trusted local network only.**
 
@@ -88,9 +90,9 @@ Firmware uploads are manual; there is no automatic download from GitHub. **The w
 
 The web interface also has separate actions to **sync/download material data from the printer** and **push/upload entries to the printer**.
 
-**Database Updater (v1.0.1):** Use **Select file** and **Update Database** to restore the reader’s local database from a `material_database.json` file. Alternatively, **Sync From Printer** retrieves the current material database directly from your configured printer using the same established sync operation as the Material Database page. Both options are manual, and their buttons include short explanations.
+**Database Updater:** Use **Download Database** to back up the current local `material_database.json`. Use **Select file → Update Database** to restore that JSON, or **Sync From Printer** to retrieve the configured printer’s current material database. Printer sync may not recover custom material entries stored only on the reader. All actions are manual.
 
-**Firmware updates:** The obsolete web firmware updater and its upload endpoint have been removed in v1.0.1. For this release, flash firmware over **USB using Arduino IDE**. A replacement browser-based OTA updater is being developed separately in [PR #4](https://github.com/gavrd7/CFS-RFID-ESP32/pull/4) and is **not included** in v1.0.1.
+**Firmware updates:** The old unsafe updater was removed in v1.0.1; this release introduces the replacement OTA updater. First-time migration from No OTA still requires USB. Thereafter, manually upload the OTA application binary via the web interface.
 
 **These are manual actions, not automatic background synchronisation.** Back up the printer's material database before your first push, and avoid testing database writes on a production printer until you understand the recovery process.
 
