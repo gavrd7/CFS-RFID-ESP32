@@ -842,20 +842,30 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
     function pushAgentBase() {
       return window.location.protocol + "//" + window.location.hostname + ":8081";
     }
-    function syncLiveFromPrinter() {
-      if (!document.getElementById("printer_host").value) { mmMsg("Set the printer host in settings first", true); return; }
-      mmMsg("Syncing live database from printer...", false);
+    function syncLiveFromPrinter(statusTarget) {
+      // Show results in whichever database dialog initiated this shared sync.
+      function reportSyncStatus(message, isError) {
+        if (statusTarget === "dstatus") {
+          var el = document.getElementById("dstatus");
+          el.textContent = message;
+          el.style.color = isError ? "#df3840" : "";
+        } else {
+          mmMsg(message, isError);
+        }
+      }
+      if (!document.getElementById("printer_host").value) { reportSyncStatus("Set the printer host in settings first", true); return; }
+      reportSyncStatus("Syncing live database from printer...", false);
       fetchRetry(pushAgentBase() + "/getdb", {},
         function (res, text) {
-          if (text.indexOf('"kvParam":') === -1) { mmMsg("Sync failed: unexpected response", true); return; }
+          if (text.indexOf('"kvParam":') === -1) { reportSyncStatus("Sync failed: unexpected response", true); return; }
           jsonDb = text;
           matDbObj = JSON.parse(jsonDb);
           persistLocal();
           loadVendors();
           renderMaterialList();
-          mmMsg("Synced live database from printer.", false);
+          reportSyncStatus("Synced live database from printer.", false);
         },
-        function (res, reason) { mmMsg("Sync failed: " + reason, true); },
+        function (res, reason) { reportSyncStatus("Sync failed: " + reason, true); },
         { timeoutMs: 30000, maxRetries: 2 }
       );
     }
@@ -956,7 +966,6 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       if (file.name.toLowerCase() == "material_database.json") {
         document.getElementById("dselfile").innerHTML = "File: " + file.name + "<br>Size: " + formatBytes(file.size);
         document.getElementById("dupload").style.display = "block";
-        document.getElementById("pupload").style.display = "none";
       } else {
         document.getElementById("dselfile").innerHTML = "<font color='#df3840'>Invalid database file</font><br><br>File should be material_database.json";
         document.getElementById("dupload").style.display = "none";
@@ -1024,64 +1033,6 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
             formData.append('dbfile', blob, file.name);
             xhr.send(formData);
           });
-      }
-    }
-    function downloadDb() {
-      var xhr = new XMLHttpRequest();
-      return new Promise((resolve, reject) => {
-        xhr.onreadystatechange = function () {
-          if (this.readyState === XMLHttpRequest.DONE) {
-            if (xhr.status === 200) {
-              resolve(xhr.responseText);
-            } else {
-              resolve("");
-            }
-          }
-        };
-        xhr.open('GET', 'http://' + document.getElementById("printer_host").value + '/downloads/defData/material_database.json');
-        xhr.timeout = 5000;
-        xhr.send();
-      });
-    }
-    const uploadDbFromPrinter = async () => {
-      const res = await downloadDb();
-      if (res.length > 0) {
-        document.getElementById("dupload").style.display = "none";
-        document.getElementById("dbtnsel").style.display = "none";
-        document.getElementById("pupload").style.display = "none";
-        document.getElementById("dstatus").innerHTML = "<br><progress max='100' value='0'>0%</progress><br><br>Uploading database file";
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-          if (this.readyState === XMLHttpRequest.DONE) {
-            if (this.status === 200) {
-              document.getElementById("dstatus").innerHTML = this.responseText;
-            } else {
-              document.getElementById("pupload").style.display = "block";
-              document.getElementById("dstatus").innerHTML = "<font color='#df3840'>HTTP Error</font>";
-            }
-            setTimeout(redirect, 8000);
-          }
-        };
-        xhr.upload.onprogress = function (e) {
-          var percentComplete = Math.ceil((e.loaded / e.total) * 100);
-          document.getElementById("dstatus").innerHTML = "<br><progress max='100' value='" + percentComplete + "'>" + percentComplete + "%</progress><br><br>Uploading database file";
-        };
-        xhr.upload.onloadend = function (e) {
-          document.getElementById("dstatus").innerHTML = "<div id='loader'></div><br>Updating database, Please wait.";
-        };
-        xhr.open("POST", "/updatedb.html", true);
-        Promise.resolve(new TextEncoder().encode(res))
-          .then(v => compress(v))
-          .then(v => {
-            var formData = new FormData();
-            const bytes = new Uint8Array(v);
-            const blob = new Blob([bytes], { type: 'application/octet-stream' });
-            formData.append('dbfile', blob, 'material_database.json');
-            xhr.send(formData);
-          });
-      }
-      else {
-        document.getElementById("dstatus").innerHTML = "<font color='#df3840'>Error downloading file from printer</font>";
       }
     }
     function redirect() {
@@ -1385,6 +1336,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
                 <center><input id="dbtnsel" type="button" class="btn"
                     onclick="document.getElementById('dbfile').click()" value="Select file" style="display: block;">
                 </center>
+                <small style="display:block;opacity:0.7;margin:4px 0 12px;">Upload a local material_database.json file to restore the reader database.</small>
                 <p id="dselfile"></p>
                 <input id="dbfile" type="file" name="dbupdate" size="0" accept=".json" onChange="DbFileSelected();"
                   style="width:0; height:0;"></p>
@@ -1394,8 +1346,10 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
                   </center>
                   <center><input id="dupload" type="button" class="btn" value="Update Database" onClick="uploadDb();"
                       style="display: none;"></center>
-                  <center><input id="pupload" type="button" class="btn" value="Update From Printer"
-                      onClick="uploadDbFromPrinter();" style="display: none;"></center>
+                  <center><input id="pupload" type="button" class="btn" value="Sync From Printer"
+                      onClick="syncLiveFromPrinter('dstatus');" style="display: none;">
+                    <small style="display:block;opacity:0.7;margin:4px 0 8px;">Pull the live material database directly from the configured printer.</small>
+                  </center>
                 </div>
               </form>
             </td>
@@ -1435,6 +1389,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
             <input type="submit" class="btn" value="+ New From Template" onClick="newMaterialItem();">
             <input id="mmSync" type="submit" class="btn" value="Sync Live From Printer" onClick="syncLiveFromPrinter();">
           </div>
+          <small style="display:block;opacity:0.7;margin:4px 0 10px;">Pull the live material database directly from the configured printer.</small>
           <div class="mv-action-row mv-reboot-row">
             <label><input type="checkbox" id="mmReboot"> Reboot printer after push</label>
           </div>
