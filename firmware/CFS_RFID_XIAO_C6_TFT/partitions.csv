@@ -1,0 +1,10 @@
+# XIAO ESP32-C6 4MB: two OTA slots and a LittleFS-compatible data partition.
+# The sketch uses LittleFS for configuration and the local material database.
+# Changing from the previous No OTA layout REQUIRES a one-time USB reflash
+# and may erase previous settings/database. Back up first.
+# Name, Type, SubType, Offset, Size, Flags
+nvs,      data, nvs,     0x9000,   0x5000,
+otadata,  data, ota,     0xe000,   0x2000,
+app0,     app,  ota_0,   0x10000,  0x1B0000,
+app1,     app,  ota_1,   0x1C0000,0x1B0000,
+spiffs,   data, spiffs,  0x370000,0x90000,
