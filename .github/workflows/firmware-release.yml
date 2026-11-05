@@ -17,10 +17,29 @@ jobs:
       - uses: actions/checkout@v4
       - uses: arduino/setup-arduino-cli@v2
       - name: Install toolchain and libraries
+        shell: bash
         run: |
-          arduino-cli core update-index --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
-          arduino-cli core install esp32:esp32@3.3.3 --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
-          arduino-cli lib install "Adafruit GFX Library" "Adafruit ST7735 and ST7789 Library" "LibSSH-ESP32@5.10.0"
+          set -euo pipefail
+          esp32_index="https://espressif.github.io/arduino-esp32/package_esp32_index.json"
+          # GitHub-hosted runners download the ESP32 toolchain afresh. Some
+          # Espressif mirror requests intermittently return HTTP 504, notably
+          # esp32:esp-x32@2507. Retry failed installs, not firmware builds.
+          retry_install() {
+            local attempt delay
+            for attempt in 1 2 3 4 5; do
+              if "$@"; then return 0; fi
+              if [[ "$attempt" -eq 5 ]]; then
+                echo "::error::Dependency installation failed after 5 attempts."
+                return 1
+              fi
+              delay=$((attempt * 15))
+              echo "::warning::Dependency download failed (attempt ${attempt}/5); retrying in ${delay}s."
+              sleep "$delay"
+            done
+          }
+          retry_install arduino-cli core update-index --additional-urls "$esp32_index"
+          retry_install arduino-cli core install esp32:esp32@3.3.3 --additional-urls "$esp32_index"
+          retry_install arduino-cli lib install "Adafruit GFX Library" "Adafruit ST7735 and ST7789 Library" "LibSSH-ESP32@5.10.0"
       - name: Compile for XIAO ESP32-C6 with OTA partitions
         run: |
           mkdir -p dist/build
