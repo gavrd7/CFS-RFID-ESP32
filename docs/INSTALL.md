@@ -104,7 +104,7 @@ In **Tools**, choose the equivalent settings for your installed ESP32 core:
 | Board | **XIAO_ESP32C6** |
 | USB CDC On Boot | **Enabled** |
 | Flash size | **4 MB** |
-| Partition scheme | **No OTA (2MB APP / 2MB SPIFFS)** |
+| Partition scheme | **Custom `partitions.csv` from the sketch folder (two OTA app slots + LittleFS)** |
 | PSRAM | **None** |
 | Erase All Flash Before Sketch Upload | **Disabled** when updating a configured device |
 | Serial Monitor baud | **115200** |
@@ -115,7 +115,24 @@ Click **Verify** (✓) to compile first. If successful, click **Upload**. Watch 
 
 **Important for existing devices:** the sketch calls `LittleFS.begin(true)`, which means a LittleFS mount failure can result in formatting the filesystem. Do not assume `Erase All Flash: Disabled` guarantees stored configuration survives every failure or partition-layout change. Back up settings before reflashing or changing partition schemes.
 
-The firmware's **No OTA** partition scheme means the normal update method is **USB upload**. You do not normally need a separate LittleFS filesystem image upload because the web interface is embedded in the sketch.
+### Moving an existing reader to web firmware updates
+
+Older builds were flashed using **No OTA (2MB APP / 2MB SPIFFS)**. That partition scheme cannot accept an OTA application update. The sketch now contains a custom `partitions.csv` for a **4 MB XIAO ESP32-C6**, with two 0x1B0000-byte application slots and a 0x90000-byte LittleFS-compatible data partition.
+
+1. **Back up** your reader settings, Wi-Fi/AP configuration and material database before changing partitions. The old and new filesystem partitions differ and stored files may become inaccessible or be formatted.
+2. Compile the **complete updated sketch folder**, including `partitions.csv`. Confirm the IDE/CLI build actually uses the custom partition table and that the application fits the OTA slot. Do **not** flash if the binary exceeds 0x1B0000 bytes.
+3. **Flash once over USB**, with the correct 4 MB flash configuration, to install the new partition table and application. Restore configuration/data as necessary. Keep the USB recovery path available.
+4. Once the new firmware runs successfully, open **Settings → Firmware Updater**, select the **CFS-RFID-XIAO-ESP32C6-OTA.bin** application image from a successful project release or GitHub Actions artifact, and choose **Update Firmware**. Check the result and wait for the reader to restart.
+
+For subsequent web uploads, select **only the application OTA .bin**; never upload bootloader, partitions, merged-flash or arbitrary ESP32 binaries. Firmware uploads are **manual only**, and a web update cannot change the device's partition layout. A failed upload should keep the previously running firmware; the device will report errors rather than automatically restarting.
+
+> **Security:** The device's web interface, including its firmware upload endpoint, is currently intended **only for a trusted local network** and has no verified authentication. Anyone who can access that endpoint may be able to install arbitrary firmware. Never expose it directly to the internet or an untrusted LAN. **OTA does not currently provide signed-firmware verification or guaranteed rollback.**
+
+### Build assets from GitHub Actions
+
+The `Build ESP32-C6 firmware and release assets` workflow compiles the sketch and provides an application OTA binary, a zipped Arduino sketch directory (including the custom partition table), and SHA-256 checksums. Source code is also available from GitHub. Tagged `v*` releases attach these files when the build passes. The build is pinned to ESP32 core 3.3.3 and LibSSH-ESP32 5.10.0; it must pass CI and be hardware-tested before relying on release binaries. **If compilation fails or the binary is too large, no OTA binary should be published.**
+
+The embedded web interface does not require a separate LittleFS filesystem upload.
 
 ## 6. Connect to the web interface
 
