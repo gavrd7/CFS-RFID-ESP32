@@ -6,6 +6,10 @@ This guide covers first-time setup and migration to OTA-capable firmware. You wi
 
 > **IMPORTANT — upgrading from v1.0.1 or earlier:** This release introduces a new **dual-OTA partition layout**. The first installation of this layout **requires USB** and can make the reader’s existing **LittleFS database and settings inaccessible or cause them to be formatted**. Before flashing, use **Database Updater → Download Database** to save `material_database.json` and record your access-point, Wi-Fi and printer configuration. Restore your data after the USB migration. **Do not upload the OTA `.bin` to an old No OTA installation.** See [the migration procedure](#moving-an-existing-reader-to-web-firmware-updates).
 
+## Board compatibility
+
+This guide and wiring table use the **hardware-tested Seeed XIAO ESP32-C6**. For other ESP32-C6 variants, use the **Generic Source** ZIP (source only; no precompiled generic firmware) and follow [Generic ESP32-C6 setup](GENERIC_ESP32C6.md) instead of copying XIAO GPIO numbers. The generic package requires you to complete `board_config.h` and verify the board's flash/OTA partition layout before compiling. **Never flash the XIAO OTA binary on an unverified board.**
+
 ## 1. Collect the parts
 
 | Part | Purpose |
