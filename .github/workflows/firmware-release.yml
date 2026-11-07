@@ -97,17 +97,24 @@ jobs:
 
           cp "$binary" "dist/release/CFS-RFID-XIAO-ESP32C6-OTA.bin"
           zip -qr "dist/release/CFS-RFID-ESP32-${version}-Arduino.zip" firmware/CFS_RFID_XIAO_C6_TFT
-          # Source-only generic ESP32-C6 package; the GPIOs are intentionally unset.
+
+          # Extra editable source-only package for untested ESP32-C6 boards.
+          # Do not compile, sign, or publish a generic OTA binary.
           mkdir -p dist/generic-source
           cp -R firmware/CFS_RFID_XIAO_C6_TFT dist/generic-source/
           cp docs/GENERIC_ESP32C6.md dist/generic-source/README-GENERIC-ESP32C6.md
           generic_config="dist/generic-source/CFS_RFID_XIAO_C6_TFT/board_config.h"
           sed -i 's/^#define CFS_BOARD_XIAO_ESP32C6     1$/#define CFS_BOARD_XIAO_ESP32C6     0/' "$generic_config"
           sed -i 's/^#define CFS_BOARD_GENERIC_ESP32C6  0$/#define CFS_BOARD_GENERIC_ESP32C6  1/' "$generic_config"
-          grep -q '^#define CFS_BOARD_GENERIC_ESP32C6  1
+          grep -qx '#define CFS_BOARD_XIAO_ESP32C6     0' "$generic_config"
+          grep -qx '#define CFS_BOARD_GENERIC_ESP32C6  1' "$generic_config"
+          grep -qx '#define RFID_SCK_PIN   -1' "$generic_config"
+          (cd dist/generic-source && zip -qr "../release/CFS-RFID-ESP32C6-Generic-Source-${version}.zip" .)
+
+          cp docs/Wiring_Reference.pdf "dist/release/CFS-RFID-ESP32-${version}-Wiring.pdf"
           zip -qr dist/release/enclosure_stls.zip enclosure_stls
 
-          # Publish checksums for all four assets, not just firmware files.
+          # Publish SHA-256 checksums for all five downloadable assets.
           (cd dist/release && sha256sum *.bin *.zip *.pdf > SHA256SUMS.txt)
 
           echo "Release bundle contents:"
