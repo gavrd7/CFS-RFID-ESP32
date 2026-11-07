@@ -8,7 +8,7 @@ This guide covers first-time setup and migration to OTA-capable firmware. You wi
 
 ## Board compatibility
 
-This guide and wiring table use the **hardware-tested Seeed XIAO ESP32-C6**. For other ESP32-C6 variants, use the **Generic Source** ZIP (source only; no precompiled generic firmware) and follow [Generic ESP32-C6 setup](GENERIC_ESP32C6.md) instead of copying XIAO GPIO numbers. The generic package requires you to complete `board_config.h` and verify the board's flash/OTA partition layout before compiling. **Never flash the XIAO OTA binary on an unverified board.**
+This guide and wiring table use the **hardware-tested Seeed XIAO ESP32-C6**. For other ESP32-C6 variants, use the **Generic Source** ZIP (source only; no precompiled generic firmware) and follow [Generic ESP32-C6 setup](GENERIC_ESP32C6.md) instead of copying XIAO GPIO numbers. The generic package includes **pre-populated GPIO numbers matching the tested XIAO wiring**. Before flashing, compare them against your board's pinout and connections; change only those that differ in `board_config.h`. Check the actual board selection and flash/OTA partition layout as well. No GPIO editing is needed if the defaults really match your hardware. **Never flash the XIAO OTA binary on an unverified board.**
 
 ## 1. Collect the parts
 
