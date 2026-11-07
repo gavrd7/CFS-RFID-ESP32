@@ -25,22 +25,9 @@
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSansBold12pt7b.h>
 
-// Seeed Studio XIAO ESP32-C6 + RC522 wiring
-// D8/GPIO19  -> RC522 SCK
-// D9/GPIO20  -> RC522 MISO
-// D10/GPIO18 -> RC522 MOSI
-// D3/GPIO21  -> RC522 SDA/SS (chip select)
-// D2/GPIO2   -> RC522 RST
-// D1/GPIO1   -> buzzer/speaker signal
-#define RFID_SCK_PIN   19
-#define RFID_MISO_PIN  20
-#define RFID_MOSI_PIN  18
-#define RFID_SS_PIN    21
-#define RFID_RST_PIN    2
-#define SPK_PIN         1
-#define TFT_CS_PIN     22 // D4
-#define TFT_DC_PIN     23 // D5
-#define TFT_RST_PIN    16 // D6
+// Hardware profile: XIAO is the tested default. Generic ESP32-C6 GPIOs
+// are user-configured in board_config.h (never in the printer sync code).
+#include "board_config.h"
 
 MFRC522 mfrc522(RFID_SS_PIN, RFID_RST_PIN);
 Adafruit_ST7789 tft(TFT_CS_PIN, TFT_DC_PIN, TFT_RST_PIN);
@@ -444,6 +431,7 @@ static const char *remoteDir()
 
 static void selectAntenna()
 {
+#if CFS_HAS_XIAO_ANTENNA_SWITCH
   pinMode(ANT_SWITCH_POWER_PIN, OUTPUT);
   digitalWrite(ANT_SWITCH_POWER_PIN, LOW); // power the RF switch on
 
@@ -455,6 +443,11 @@ static void selectAntenna()
     pinMode(ANT_SWITCH_SELECT_PIN, INPUT); // floats low -> onboard ceramic antenna
     Serial.println("Antenna: onboard ceramic");
   }
+#else
+  // Other ESP32-C6 boards have their own antenna arrangement.
+  // Do not drive XIAO-specific RF-switch GPIOs on unknown boards.
+  Serial.println("Antenna: board default (no XIAO RF-switch control)");
+#endif
 }
 
 // Opens a session + does password auth. Caller must ssh_free() on failure,
