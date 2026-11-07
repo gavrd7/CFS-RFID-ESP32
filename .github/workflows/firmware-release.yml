@@ -99,7 +99,8 @@ jobs:
           zip -qr "dist/release/CFS-RFID-ESP32-${version}-Arduino.zip" firmware/CFS_RFID_XIAO_C6_TFT
 
           # Extra editable source-only package for untested ESP32-C6 boards.
-          # Do not compile, sign, or publish a generic OTA binary.
+          # Prefill the XIAO's tested pin assignments as editable defaults;
+          # do not compile, sign, or publish a generic OTA binary.
           mkdir -p dist/generic-source
           cp -R firmware/CFS_RFID_XIAO_C6_TFT dist/generic-source/
           cp docs/GENERIC_ESP32C6.md dist/generic-source/README-GENERIC-ESP32C6.md
@@ -109,7 +110,7 @@ jobs:
           sed -i 's/^#define CFS_BOARD_GENERIC_ESP32C6  0$/#define CFS_BOARD_GENERIC_ESP32C6  1/' "$generic_config"
           grep -qx '#define CFS_BOARD_XIAO_ESP32C6     0' "$generic_config"
           grep -qx '#define CFS_BOARD_GENERIC_ESP32C6  1' "$generic_config"
-          grep -qx '#define RFID_SCK_PIN   -1' "$generic_config"
+          grep -qx '#define RFID_SCK_PIN   19' "$generic_config"
           (cd dist/generic-source && zip -qr "../release/CFS-RFID-ESP32C6-Generic-Source-${version}.zip" .)
           # Verify the public source archive is not accidentally a XIAO build.
           unzip -p "dist/release/CFS-RFID-ESP32C6-Generic-Source-${version}.zip" CFS_RFID_XIAO_C6_TFT/board_config.h | grep -qx '#define CFS_BOARD_GENERIC_ESP32C6  1'
