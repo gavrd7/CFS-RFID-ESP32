@@ -113,8 +113,15 @@ jobs:
           grep -qx '#define RFID_SCK_PIN   19' "$generic_config"
           (cd dist/generic-source && zip -qr "../release/CFS-RFID-ESP32C6-Generic-Source-${version}.zip" .)
           # Verify the public source archive is not accidentally a XIAO build.
-          unzip -p "dist/release/CFS-RFID-ESP32C6-Generic-Source-${version}.zip" CFS_RFID_XIAO_C6_TFT/board_config.h | grep -qx '#define CFS_BOARD_GENERIC_ESP32C6  1'
-          unzip -l "dist/release/CFS-RFID-ESP32C6-Generic-Source-${version}.zip" | grep -q 'README-GENERIC-ESP32C6.md'
+          # Avoid grep -q pipe early-exit/SIGPIPE under 'set -o pipefail'.
+          generic_zip="dist/release/CFS-RFID-ESP32C6-Generic-Source-${version}.zip"
+          unzip -t "$generic_zip"
+          unzip -p "$generic_zip" CFS_RFID_XIAO_C6_TFT/board_config.h > dist/generic-config-check.h
+          grep -qx '#define CFS_BOARD_GENERIC_ESP32C6  1' dist/generic-config-check.h
+          grep -qx '#define RFID_SCK_PIN   19' dist/generic-config-check.h
+          unzip -Z -1 "$generic_zip" > dist/generic-zip-entries.txt
+          grep -qx 'README-GENERIC-ESP32C6.md' dist/generic-zip-entries.txt
+          echo "Generic source package validated: $generic_zip"
 
           cp docs/Wiring_Reference.pdf "dist/release/CFS-RFID-ESP32-${version}-Wiring.pdf"
           zip -qr dist/release/enclosure_stls.zip enclosure_stls
