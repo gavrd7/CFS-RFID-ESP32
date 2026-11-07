@@ -54,7 +54,9 @@ jobs:
       - name: Package application binary, sketch, and checksums
         shell: bash
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
+          trap 'echo "::error file=.github/workflows/firmware-release.yml::Packaging failed at line ${LINENO}: ${BASH_COMMAND}"' ERR
+          set -x
           mkdir -p dist/release
           # Verify the emitted partition binary includes both OTA app
           # partitions and LittleFS storage before publishing any image.
