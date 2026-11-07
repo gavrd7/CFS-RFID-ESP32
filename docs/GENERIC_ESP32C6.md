@@ -2,14 +2,37 @@
 
 The **Seeed Studio XIAO ESP32-C6 is the only officially hardware-tested board**. This folder describes an experimental path for other ESP32-C6 development boards. There are **no precompiled generic firmware binaries** and no guarantee that a particular development board will work without adaptations.
 
-## Before compiling
+## Before flashing: board and wiring checklist
 
-1. Download the **Generic Source** ZIP from the release. Extract the **entire** `CFS_RFID_XIAO_C6_TFT` sketch folder, keeping all nested headers and `partitions.csv` beside the sketch.
-2. Open `CFS_RFID_XIAO_C6_TFT.ino` in Arduino IDE and edit **`board_config.h`** in the same sketch directory.
-3. The generic source ZIP already selects `CFS_BOARD_GENERIC_ESP32C6 = 1` and disables `CFS_BOARD_XIAO_ESP32C6`. Set **all nine** GPIO placeholders (initially `-1`) for your actual board and wiring. The compiler deliberately rejects incomplete mappings.
-4. Match RC522 to RFID SPI SCK/MISO/MOSI, SS and RST; match the ST7789 TFT to the shared SPI bus, its separate CS and DC/RST; map the optional speaker output to an available GPIO. Check your board's pinout for strapping, boot mode, USB, integrated flash, RF/antenna and other reserved functions. **Do not assume the D-pin labels from the XIAO have the same GPIO numbers on your board.**
-5. Select the **correct ESP32-C6 board** and **actual flash capacity** in Arduino IDE; do not blindly select XIAO. Confirm compatibility of the included custom OTA partition table (`app0` and `app1`, 0x1B0000 bytes each, plus 0x90000 bytes LittleFS) with your board's flash and boot configuration **before flashing**. The current partition table is for **4 MB flash**. Devices with smaller or differently arranged flash require a separately verified partition layout.
-6. Build and flash **over USB** first. Verify boot, Wi-Fi, display, RFID read and printer communication before considering OTA. Back up data before any reflash or partition change; `LittleFS.begin(true)` can format an unmountable filesystem.
+The generic package deliberately **does not compile out of the box**. Matching the logical GPIO functions is the first step, but you must also ensure the target board's pin restrictions, flash configuration, physical wiring and power requirements are compatible.
+
+| Function | Existing XIAO GPIO | What to set on the generic board |
+| --- | ---: | --- |
+| RC522 SPI SCK | 19 | Suitable SPI clock-capable GPIO |
+| RC522 SPI MISO | 20 | Suitable SPI input GPIO |
+| RC522 SPI MOSI | 18 | Suitable SPI output GPIO |
+| RC522 SS/CS | 21 | Free GPIO, separate from TFT CS |
+| RC522 reset | 2 | Free output-capable GPIO |
+| Optional speaker signal | 1 | Free output-capable GPIO; currently required by the sketch |
+| ST7789 TFT CS | 22 | Free GPIO, separate from RC522 CS |
+| ST7789 TFT DC | 23 | Free output-capable GPIO |
+| ST7789 TFT reset | 16 | Free output-capable GPIO |
+
+The RC522 and ST7789 use the **same SPI SCK/MOSI signals** in the current design. TFT MISO is not used. Verify the voltage supply and backlight requirements of your exact modules; RC522 logic is **3.3V**. Do not assign pins used for onboard flash, USB, boot strapping, or other reserved functions. The generic profile does **not** control the XIAO RF antenna switch (GPIO3/GPIO14).
+
+## Exact user procedure
+
+1. Download the **Generic Source** ZIP from a release *that includes it* and extract it. The ZIP contains a sketch folder plus this guide. Do **not** use the XIAO precompiled `.bin`.
+2. Open the extracted `CFS_RFID_XIAO_C6_TFT/CFS_RFID_XIAO_C6_TFT.ino` in Arduino IDE. Keep all companion headers and subfolders in place.
+3. Edit `board_config.h`. The generic ZIP has `CFS_BOARD_GENERIC_ESP32C6 = 1` and `CFS_BOARD_XIAO_ESP32C6 = 0`. Replace **all nine** `-1` pin placeholders with the GPIO numbers of the pins you actually wired. Check that no two independent signals overlap.
+4. Install the ESP32 Arduino board support and the dependencies listed in [INSTALL.md](INSTALL.md). Choose the **actual ESP32-C6 board** in Arduino IDE rather than selecting the XIAO automatically. Verify that the pin numbering matches that board definition.
+5. Confirm the module has **at least 4MB of flash** and that the provided `partitions.csv` (two 0x1B0000 OTA application slots plus 0x90000 filesystem) is appropriate for its flash configuration. Check that your build actually selects the custom partition table, and fits in the selected app partition. A 4MB flash label by itself does not guarantee an arbitrary board's boot/flash configuration is compatible.
+6. Check your AP and Wi-Fi settings and change default access credentials as appropriate. Printer SSH credentials are configured through the web Settings page after flashing; **do not embed real passwords in a public source archive**.
+7. Choose **USB upload**, compile/verify, and flash the generic build to the actual board. If migrating from another partition layout, **back up existing LittleFS data and settings first**. The sketch uses `LittleFS.begin(true)`, which may format an unmountable filesystem.
+8. Test in this order: serial boot output, network and Settings, TFT display, passive RFID reading, and **read-only** printer synchronization. Only then assess tag writing, storage and future OTA behaviour on that particular board.
+9. Keep a wired recovery method available. Never upload a precompiled XIAO OTA binary to a generic board, even if its GPIO assignments look identical.
+
+For a generic ESP32-C6 build, the firmware can potentially run without any changes to printer/database logic. **GPIO mapping alone is not a guarantee**; differences in flash, antenna circuits, boot pins and module wiring still require checking.
 
 ## Safety and support
 
