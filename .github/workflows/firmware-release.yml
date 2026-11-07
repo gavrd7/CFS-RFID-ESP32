@@ -112,7 +112,7 @@ jobs:
           sed -i 's/^#define CFS_BOARD_GENERIC_ESP32C6  0$/#define CFS_BOARD_GENERIC_ESP32C6  1/' "$generic_config"
           grep -qx '#define CFS_BOARD_XIAO_ESP32C6     0' "$generic_config"
           grep -qx '#define CFS_BOARD_GENERIC_ESP32C6  1' "$generic_config"
-          grep -qx '#define RFID_SCK_PIN   19' "$generic_config"
+          grep -Eq '^[[:space:]]*#define[[:space:]]+RFID_SCK_PIN[[:space:]]+19$' "$generic_config"
           (cd dist/generic-source && zip -qr "../release/CFS-RFID-ESP32C6-Generic-Source-${version}.zip" .)
           # Verify the public source archive is not accidentally a XIAO build.
           # Avoid grep -q pipe early-exit/SIGPIPE under 'set -o pipefail'.
@@ -120,7 +120,7 @@ jobs:
           unzip -t "$generic_zip"
           unzip -p "$generic_zip" CFS_RFID_XIAO_C6_TFT/board_config.h > dist/generic-config-check.h
           grep -qx '#define CFS_BOARD_GENERIC_ESP32C6  1' dist/generic-config-check.h
-          grep -qx '#define RFID_SCK_PIN   19' dist/generic-config-check.h
+          grep -Eq '^[[:space:]]*#define[[:space:]]+RFID_SCK_PIN[[:space:]]+19$' dist/generic-config-check.h
           unzip -Z -1 "$generic_zip" > dist/generic-zip-entries.txt
           grep -qx 'README-GENERIC-ESP32C6.md' dist/generic-zip-entries.txt
           echo "Generic source package validated: $generic_zip"
