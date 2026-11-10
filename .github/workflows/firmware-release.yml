@@ -173,7 +173,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: CFS-RFID-ESP32C6-firmware
+          name: CFS-RFID-firmware-and-source
           path: release-assets
       - uses: softprops/action-gh-release@v2
         with:
