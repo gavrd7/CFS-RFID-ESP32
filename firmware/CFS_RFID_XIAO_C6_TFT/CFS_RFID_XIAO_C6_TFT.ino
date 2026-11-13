@@ -1,5 +1,5 @@
 // CFS RFID + Creality Printer Push Agent - single-board XIAO ESP32-C6 merge
-// Firmware version: v1.0.1
+// Firmware version: v1.3.2
 // Database Updater fixes, UI improvements and legacy updater removal.
 // RFID and printer database transfer logic unchanged.
 //
@@ -25,9 +25,14 @@
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSansBold12pt7b.h>
 
-// Hardware profile: XIAO is the tested default. Generic ESP32-C6 GPIOs
+// Hardware profile: XIAO is the tested default. Generic ESP32-C6, 
+// ESP32-S3 Super Mini, Waveshare ESP32-S3-Zero and Generic ESP32-S3GPIOs
 // are user-configured in board_config.h (never in the printer sync code).
+
 #include "board_config.h"
+
+// Define the current FW version
+#define FW_VERSION  "1.3.2"
 
 MFRC522 mfrc522(RFID_SS_PIN, RFID_RST_PIN);
 Adafruit_ST7789 tft(TFT_CS_PIN, TFT_DC_PIN, TFT_RST_PIN);
@@ -1593,9 +1598,62 @@ void createKey()
   }
 }
 
+// 1. Central function that maps any placeholder to its live value
+String getTemplateValue(const char* placeholder) {
+  if (strcmp(placeholder, "%BOARD_NAME%") == 0) return BOARD_NAME;
+  if (strcmp(placeholder, "%FW_VERSION%")    == 0) return FW_VERSION;
+  return ""; // Fallback if unknown
+}
+
+// 2. Central list of all supported placeholders in PROGMEM
+const char* const TEMPLATE_KEYS[] = {
+  "%BOARD_NAME%",
+  "%FW_VERSION%"
+};
+const size_t TEMPLATE_KEY_COUNT = sizeof(TEMPLATE_KEYS) / sizeof(TEMPLATE_KEYS[0]);
+
+// 3. Reusable function to serve ANY PROGMEM webpage with live variables
+void sendTemplate_P(const char* htmlData) {
+  webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  webServer.send(200, "text/html", "");
+
+  const char* cursor = htmlData;
+
+  while (*cursor != '\0') {
+    const char* earliestMatch = nullptr;
+    const char* matchedKey = nullptr;
+
+    // Scan for the next placeholder in the HTML
+    for (size_t i = 0; i < TEMPLATE_KEY_COUNT; i++) {
+      const char* found = strstr(cursor, TEMPLATE_KEYS[i]);
+      if (found != nullptr && (earliestMatch == nullptr || found < earliestMatch)) {
+        earliestMatch = found;
+        matchedKey = TEMPLATE_KEYS[i];
+      }
+    }
+
+    // No more placeholders left; send the rest of the file
+    if (earliestMatch == nullptr) {
+      webServer.sendContent_P(cursor, strlen(cursor));
+      break;
+    }
+
+    // Send static HTML up to the placeholder
+    if (earliestMatch > cursor) {
+      webServer.sendContent_P(cursor, earliestMatch - cursor);
+    }
+
+    // Fetch live value and advance cursor
+    webServer.sendContent(getTemplateValue(matchedKey));
+    cursor = earliestMatch + strlen(matchedKey);
+  }
+
+  webServer.sendContent("");
+}
+
 void handleIndex()
 {
-  webServer.send_P(200, "text/html", indexData);
+  sendTemplate_P(indexData);
 }
 
 void handle404()
@@ -1771,7 +1829,7 @@ void handleFwUpdate()
     fwUpdateBytes = 0;
 
     if (!upload.filename.endsWith(".bin")) {
-      fwUpdateError = "Select a compiled ESP32-C6 application .bin file.";
+      fwUpdateError = String("Select a compiled ") + BOARD_NAME + " application .bin file.";
       return;
     }
     // UPDATE_SIZE_UNKNOWN writes to the inactive OTA slot. Update.begin()

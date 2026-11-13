@@ -1,0 +1,7 @@
+# Ignore Arduino IDE build directories
+**/build/
+build/
+
+# Ignore exported binaries in the sketch folders
+firmware/CFS_RFID_XIAO_C6_TFT/*.bin
+firmware/CFS_RFID_XIAO_C6_TFT/*.elf

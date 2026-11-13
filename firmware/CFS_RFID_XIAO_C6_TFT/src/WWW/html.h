@@ -1035,7 +1035,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
     }
     function uploadFile() {
       if (!file || !file.name.toLowerCase().endsWith(".bin")) return;
-      if (!confirm("Install this ESP32-C6 application firmware? The reader will reboot after a successful update. Back up settings first.")) return;
+      if (!confirm("Install this %BOARD_NAME% application firmware? The reader will reboot after a successful update. Back up settings first.")) return;
       var button = document.getElementById("upload");
       var select = document.getElementById("btnsel");
       var status = document.getElementById("status");
@@ -1153,7 +1153,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
             <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/CREALITY_LOGO.png?width=330" alt="Creality" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
             <span class="mv-logo-fallback" style="display:none">CREALITY</span>
           </span>
-          <div><strong>CFS RFID</strong><span class="mv-sub">Filament manager - XIAO ESP32-C6</span></div>
+          <div><strong>CFS RFID</strong><span class="mv-sub">Filament manager - %BOARD_NAME% - FW: %FW_VERSION%</span></div>
         </div>
       </header>
       <p class="mv-intro">Select and apply filament settings, or read an existing CFS tag. Manage templates and printer synchronisation under Settings &gt; Material Database.</p>
@@ -1402,7 +1402,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
                 <center style="width:100%;">
                   <input id="btnsel" type="button" class="btn" onclick="document.getElementById('fwfile').click()"
                     value="Select file" style="display:block;">
-                  <small style="display:block;width:100%;max-width:520px;box-sizing:border-box;text-align:center;line-height:1.5;opacity:0.7;margin:10px auto 18px;">Upload the ESP32-C6 application .bin from a release. Requires an OTA-enabled partition layout.</small>
+                  <small style="display:block;width:100%;max-width:520px;box-sizing:border-box;text-align:center;line-height:1.5;opacity:0.7;margin:10px auto 18px;">Upload the %BOARD_NAME% application .bin from a release. Requires an OTA-enabled partition layout.</small>
                 </center>
                 <p id="selfile"></p>
                 <input id="fwfile" type="file" name="fwupdate" size="0" accept=".bin" onChange="FileSelected();"

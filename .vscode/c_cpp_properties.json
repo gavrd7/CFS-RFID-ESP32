@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "ESP32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/firmware/CFS_RFID_XIAO_C6_TFT/**",
+                "${workspaceFolder}/firmware/CFS_RFID_XIAO_C6_TFT/src/**"
+            ],
+            "defines": [
+                "CONFIG_IDF_TARGET_ESP32S3",
+                "USBCON",
+                "PROGMEM="
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ],
+    "version": 4
+}
