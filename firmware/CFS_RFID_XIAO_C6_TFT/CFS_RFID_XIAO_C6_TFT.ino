@@ -30,9 +30,7 @@
 // are user-configured in board_config.h (never in the printer sync code).
 
 #include "board_config.h"
-
-// Define the current FW version
-#define FW_VERSION  "1.3.2"
+#include "firmware_version.h"
 
 MFRC522 mfrc522(RFID_SS_PIN, RFID_RST_PIN);
 Adafruit_ST7789 tft(TFT_CS_PIN, TFT_DC_PIN, TFT_RST_PIN);
@@ -1601,7 +1599,7 @@ void createKey()
 // 1. Central function that maps any placeholder to its live value
 String getTemplateValue(const char* placeholder) {
   if (strcmp(placeholder, "%BOARD_NAME%") == 0) return BOARD_NAME;
-  if (strcmp(placeholder, "%FW_VERSION%")    == 0) return FW_VERSION;
+  if (strcmp(placeholder, "%FW_VERSION%")    == 0) return FW_DISPLAY_VERSION;
   return ""; // Fallback if unknown
 }
 
