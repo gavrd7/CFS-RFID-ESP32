@@ -53,7 +53,7 @@ jobs:
             for other in SUPERMINI ZERO GENERIC; do
               value=0
               if [[ "$profile" == "$other" ]]; then value=1; fi
-              sed -E "s/(#define[[:space:]]+CFS_BOARD_S3_${other}[[:space:]]+)[01]/\\1${value}/" "$config" > "$temp/next"
+              sed -E "s/(#define[[:space:]]+CFS_BOARD_S3_${other}[[:space:]]+)[01]/\1 ${value}/" "$config" > "$temp/next"
               cp "$temp/next" "$temp/board_config.h"
               config="$temp/board_config.h"
             done
@@ -66,9 +66,9 @@ jobs:
           for selection in both none; do
             cp "$config" "$temp/board_config.h"
             if [[ "$selection" == both ]]; then
-              sed -i -E 's/(#define[[:space:]]+CFS_BOARD_S3_SUPERMINI[[:space:]]+)0/\\11/' "$temp/board_config.h"
+              sed -i -E 's/(#define[[:space:]]+CFS_BOARD_S3_SUPERMINI[[:space:]]+)0/\1 1/' "$temp/board_config.h"
             else
-              sed -i -E 's/(#define[[:space:]]+CFS_BOARD_S3_ZERO[[:space:]]+)1/\\10/' "$temp/board_config.h"
+              sed -i -E 's/(#define[[:space:]]+CFS_BOARD_S3_ZERO[[:space:]]+)1/\1 0/' "$temp/board_config.h"
             fi
             if g++ -x c++ -E -DCONFIG_IDF_TARGET_ESP32S3 "$temp/board_config.h" > "$temp/output" 2>&1; then
               echo "::error::ESP32-S3 profile selection '$selection' was accepted"
