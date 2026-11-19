@@ -11,9 +11,15 @@
 
 #elif defined(CONFIG_IDF_TARGET_ESP32S3)
   // For the ESP32-S3, select exactly one profile:
-  // Set to 1 for Super Mini / Waveshare Zero, 0 for generic S3 boards.
+  // Select exactly one profile. S3 boards share the GPIO mapping below.
+  // Generic S3 is opt-in and requires checking the physical board's pins.
   #define CFS_BOARD_S3_SUPERMINI      0
   #define CFS_BOARD_S3_ZERO           1
+  #define CFS_BOARD_S3_GENERIC        0
+
+  #if (CFS_BOARD_S3_SUPERMINI + CFS_BOARD_S3_ZERO + CFS_BOARD_S3_GENERIC) != 1
+    #error "Select exactly one ESP32-S3 hardware profile."
+  #endif
 
 #else
   #error "Unsupported target architecture. This firmware supports ESP32-C6 and ESP32-S3."
@@ -67,10 +73,11 @@
     // Custom mapping for Waveshare ESP32-S3 Zero
     #define BOARD_NAME                  "Waveshare ESP32-S3 Zero"
 
-  #else
-    // Placeholder for future generic or full-sized ESP32-S3 Dev Kits
+  #elif CFS_BOARD_S3_GENERIC
+    // GPIO defaults are shared; verify all pins before using a generic board.
     #define BOARD_NAME                  "Generic ESP32-S3"
-
+  #else
+    #error "Unknown ESP32-S3 hardware profile."
   #endif
     #define RFID_SCK_PIN                12
     #define RFID_MISO_PIN               13
