@@ -52,7 +52,7 @@ jobs:
             for candidate in SUPERMINI ZERO GENERIC; do
               value=0
               if [[ "$candidate" == "$profile" ]]; then value=1; fi
-              sed -i -E "s/(#define[[:space:]]+CFS_BOARD_S3_${candidate}[[:space:]]+)[01]/\\1 ${value}/" "$temp/board_config.h"
+              sed -i -E "s/(#define[[:space:]]+CFS_BOARD_S3_${candidate}[[:space:]]+)[01]/\1 ${value}/" "$temp/board_config.h"
             done
             g++ -x c++ -E -dM -DCONFIG_IDF_TARGET_ESP32S3 "$temp/board_config.h" > "$temp/macros"
             grep -Eq "^#define CFS_BOARD_S3_${profile} 1$" "$temp/macros"
